@@ -2,7 +2,7 @@ import discord
 import os
 from decouple import config
 
-bot = discord.Bot()
+bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
 
 # loading all the extensions
 for filename in os.listdir('./cogs'):
