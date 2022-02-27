@@ -4,10 +4,10 @@ from decouple import config
 
 bot = discord.Bot()
 
-@bot.slash_command()
-async def hello(ctx, name: str = None):
-    name = name or ctx.author.name
-    await ctx.respond(f"Hello {name}!")
+# loading all the extensions
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        bot.load_extension(f'cogs.{filename[:-3]}')
 
 
 bot.run(config('TOKEN'))
