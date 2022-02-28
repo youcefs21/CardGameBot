@@ -74,12 +74,15 @@ class president(commands.Cog):
                 requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}")
 
         await m.delete()
-        await ctx.send("The cards have been drawn! Use `/president hand` to see your hand (don't worry, only you can see the message sent)")
+        await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
 
+        await ctx.send("```1.) if you are the president:\n" +
+                        "   - use `/give <cardCode>` to give the lowest ranking player a card\n" +
+                        "   - once everyone is ready, use `/start` to start the game\n" +
+                        "2.) if you are the lowest ranking player:\n" +
+                        "   - use `/give <cardCode>` to give the president your best card\n```"
+                        )
 
-        await ctx.send("if you are the president, use `/president givelow <cardCode>` to give the lowest ranking player a card")
-        await ctx.send("if you are the lowest ranking player, use `/president givehigh <cardCode>` to give the president your best card")
-        await ctx.send("once everyone is ready, the president must use `/president start` to start the game")
 
 
 
