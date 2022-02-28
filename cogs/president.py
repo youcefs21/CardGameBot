@@ -61,7 +61,7 @@ class mainGameMenu(discord.ui.View):
         self.gameID = gameID
         self.embed = embed
         self.roles = roles
-        super().__init__()
+        super().__init__(timeout=None)
 
 
     @discord.ui.button(label="Join Game", style=discord.ButtonStyle.green)
@@ -70,8 +70,12 @@ class mainGameMenu(discord.ui.View):
             await interaction.response.send_message("`the game is full`", ephemeral=True)
             return
 
-
+        # check that user is not already in a game
         UserID = int(interaction.user.id)
+        if (players[UserID] != None):
+            await interaction.response.send_message("error: you're already in a game!", ephemeral=True)
+            return
+
 
         players[UserID] = self.gameID            
         self.embed.add_field(name=self.roles.pop(), value=str(interaction.user))
@@ -81,7 +85,7 @@ class mainGameMenu(discord.ui.View):
         await interaction.response.send_message("you're now part of the game!", ephemeral=True)
 
         if len(self.roles)==0:
-            self.embed.description = "Game Full! Starting soon..."
+            self.embed.description = "Game Full! Awaiting for president to start..."
             await interaction.message.edit(embed=self.embed)
             await asyncio.sleep(5)
             await interaction.message.delete()
