@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.commands import SlashCommandGroup
+from discord.commands import SlashCommandGroup, slash_command
 from main import players, games, nextGameID
 import asyncio
 import requests
@@ -84,8 +84,8 @@ class president(commands.Cog):
 
 
 
-    @president.command(description="give the president a card")
-    async def givehigh(self, ctx, cardcode):
+    @slash_command(description="give the president a card")
+    async def give(self, ctx, cardcode):
         # check if player is in a game
         UserID = int(ctx.author.id)
         if (players[UserID] == None):
@@ -94,9 +94,17 @@ class president(commands.Cog):
         gameID = players[UserID]
 
         # check if the person using is the lowest player
-        if int(games[gameID]["players"][-1]) != UserID:
-            await ctx.respond("you are not the lowest ranking player", ephemeral=True)
+        if int(games[gameID]["players"][-1]) == UserID:
+            presID = int(games[gameID]["players"][0])
+
+        elif int(games[gameID]["players"][0]) == UserID:
+            presID = int(games[gameID]["players"][-1])
+    
+        else:
+            await ctx.respond("you are not the president, nor the lowest ranking player", ephemeral=True)
             return
+
+
 
         # take away cardcode from UserID
         checkSuccess = requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{UserID}/draw/?cards={cardcode}").json()
@@ -105,9 +113,7 @@ class president(commands.Cog):
             return
 
 
-
-        # give cardcode to int(games[gameID]["players"][0]) instead
-        presID = int(games[gameID]["players"][0])
+        # give cardcode to other player
         requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{presID}/add/?cards={cardcode}")
 
 
@@ -116,54 +122,13 @@ class president(commands.Cog):
 
 
 
-    @president.command(description="give the lowest ranking player a card")
-    async def givelow(self, ctx, cardcode):
-        # check if player is in a game
-        UserID = int(ctx.author.id)
-        if (players[UserID] == None):
-            await ctx.respond("error: you're not in a game!", ephemeral=True)
-            return
-        
-        gameID = players[UserID]
-
-
-
-        # check if the person using is the highest player
-        if int(games[gameID]["players"][0]) != UserID:
-            await ctx.respond("you are not the lowest ranking player", ephemeral=True)
-            return
-
-        # take away cardcode from UserID
-        checkSuccess = requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{UserID}/draw/?cards={cardcode}").json()
-
-        if checkSuccess["success"] != True:
-            await ctx.respond("card error", ephemeral=True)
-            return
-
-
-        # give cardcode to int(games[gameID]["players"][-1]) instead
-        lowID = int(games[gameID]["players"][-1])
-        requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{lowID}/add/?cards={cardcode}")
-
-
-
-        await ctx.respond("nice", ephemeral=True)
-
-
-
-    @president.command(description="start the gameplay")
+    @slash_command(description="start the gameplay")
     async def start(self, ctx):
         pass
 
 
 
-
-
-
-
-
-
-    @president.command(description="what cards do you have in your hand?")
+    @slash_command(description="what cards do you have in your hand?")
     async def hand(self, ctx):
         # check if player is in a game
         UserID = int(ctx.author.id)
