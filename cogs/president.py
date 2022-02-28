@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup
 from main import players, games, nextGameID
 import asyncio
+import requests
 
 
 class president(commands.Cog):
@@ -30,23 +31,43 @@ class president(commands.Cog):
         # initialize player 
         players[UserID] = nextGameID
         nextGameID+=1
+        currentGameID = players[UserID]
 
         # initialize game 
-        games[players[UserID]] = (None, 1, [UserID], {"President": UserID})
+        games[currentGameID] = {
+            "deckId": None,
+            "turnCount": 1,
+            "players": [UserID]
+            }
 
         # initialize lobby components
         lobbyEmbed = discord.Embed(title="A game of President!",description="awaiting players...")
         lobbyEmbed.add_field(name="President", value=str(ctx.author))
-        view = mainGameMenu(players[UserID], ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
+        view = mainGameMenu(currentGameID, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
 
         # send lobby
         lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
 
         # dm a start game button to president
-        startView = startGameButton(players[UserID], lobbyMessage)
+        startView = startGameButton(currentGameID, lobbyMessage)
         await ctx.author.send(embed=lobbyEmbed, view=startView)
 
-        await view.wait()
+        await startView.wait()
+
+        # deal the cards:
+        deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
+        games[currentGameID]["deckId"] = deck['deck_id']
+
+        done = True
+        while done:
+            for playerID in games[currentGameID]["players"]:
+                if deck["remaining"] == 0:
+                    done = False
+                    break
+                card = requests.get(f"https://deckofcardsapi.com/api/deck/{deck['deck_id']}/draw/?count=1").json()
+                deck["remaining"] -= 1
+                pile = requests.get(f"https://deckofcardsapi.com/api/deck/{deck['deck_id']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}").json()
+
 
         
 
@@ -82,6 +103,7 @@ class mainGameMenu(discord.ui.View):
 
     @discord.ui.button(label="Join Game", style=discord.ButtonStyle.green)
     async def confirm(self, button, interaction):
+        global games
         if len(self.roles) == 0:
             await interaction.response.send_message("`the game is full`", ephemeral=True)
             return
@@ -97,15 +119,14 @@ class mainGameMenu(discord.ui.View):
         self.embed.add_field(name=self.roles.pop(), value=str(interaction.user))
 
 
+        games["players"].append(UserID)
+
+
         await interaction.message.edit(embed=self.embed)
         await interaction.response.send_message("you're now part of the game!", ephemeral=True)
 
         if len(self.roles)==0:
             self.embed.description = "Game Full! Awaiting for president to start..."
-            await interaction.message.edit(embed=self.embed)
-            await asyncio.sleep(5)
-            await interaction.message.delete()
-            self.stop()
 
 
 
