@@ -13,18 +13,18 @@ class president(commands.Cog):
 
     president = SlashCommandGroup("president", "start a game of president!")
 
-    @president.command(description="only users listed can join this game!")
-    async def private(self, ctx):
-        await ctx.respond("error: not implemented")
+    # @president.command(description="only users listed can join this game!")
+    # async def private(self, ctx):
+    #     await ctx.respond("error: not implemented")
 
     @president.command(description="anyone in the server can join this game!")
-    async def public(self, ctx):
+    async def play(self, ctx):
         global nextGameID
 
         # check that the person using the command is not already in a game
         UserID = int(ctx.author.id)
         if (players[UserID] != None):
-            await ctx.respond("error: you're already in a game!")
+            await ctx.respond("error: you're already in a game!", ephemeral=True)
             return
 
 
@@ -48,9 +48,9 @@ class president(commands.Cog):
         # send lobby
         lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
 
-        # dm a start game button to president
+        # send a secret start game button to president
         startView = startGameButton(currentGameID, lobbyMessage)
-        await ctx.author.send(embed=lobbyEmbed, view=startView)
+        await ctx.respond("Press the `Start Game!` button to start the game",view=startView, ephemeral=True)
 
         await startView.wait()
 
@@ -59,10 +59,7 @@ class president(commands.Cog):
         games[currentGameID]["deckId"] = deck['deck_id']
 
         # tell users cards are being drawn
-        for playerID in games[currentGameID]["players"]:
-            user = await self.bot.fetch_user(int(playerID))
-            m = await user.send("drawing your cards... This will take about 15 seconds")
-            await m.delete(delay=10)
+        m = await ctx.send("drawing each player their cards... This will take about 15 seconds")
 
 
         done = True
@@ -76,15 +73,113 @@ class president(commands.Cog):
                 deck["remaining"] -= 1
                 requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}")
 
-        # show the players their hands
-        handMessages = []
-        for playerID in games[currentGameID]["players"]:
-            user = await self.bot.fetch_user(int(playerID))
-            hand = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/list/").json()
-            cardCodes = [x["code"] for x in hand["piles"][str(playerID)]["cards"]]
-            m = await user.send("Your hand is: ```"+str(cardCodes)+"```")
-            handMessages.append(m)
+        await m.delete()
+        await ctx.send("The cards have been drawn! Use `/president hand` to see your hand (don't worry, only you can see the message sent)")
+
+
+        await ctx.send("if you are the president, use `/president givelow <cardCode>` to give the lowest ranking player a card")
+        await ctx.send("if you are the lowest ranking player, use `/president givehigh <cardCode>` to give the president your best card")
+        await ctx.send("once everyone is ready, the president must use `/president start` to start the game")
+
+
+
+
+    @president.command(description="give the president a card")
+    async def givehigh(self, ctx, cardcode):
+        # check if player is in a game
+        UserID = int(ctx.author.id)
+        if (players[UserID] == None):
+            await ctx.respond("error: you're not in a game!", ephemeral=True)
+            return
+        gameID = players[UserID]
+
+        # check if the person using is the lowest player
+        if int(games[gameID]["players"][-1]) != UserID:
+            await ctx.respond("you are not the lowest ranking player", ephemeral=True)
+            return
+
+        # take away cardcode from UserID
+        checkSuccess = requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{UserID}/draw/?cards={cardcode}").json()
+        if checkSuccess["success"] != True:
+            await ctx.respond("card error", ephemeral=True)
+            return
+
+
+
+        # give cardcode to int(games[gameID]["players"][0]) instead
+        presID = int(games[gameID]["players"][0])
+        requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{presID}/add/?cards={cardcode}")
+
+
+
+        await ctx.respond("nice", ephemeral=True)
+
+
+
+    @president.command(description="give the lowest ranking player a card")
+    async def givelow(self, ctx, cardcode):
+        # check if player is in a game
+        UserID = int(ctx.author.id)
+        if (players[UserID] == None):
+            await ctx.respond("error: you're not in a game!", ephemeral=True)
+            return
         
+        gameID = players[UserID]
+
+
+
+        # check if the person using is the highest player
+        if int(games[gameID]["players"][0]) != UserID:
+            await ctx.respond("you are not the lowest ranking player", ephemeral=True)
+            return
+
+        # take away cardcode from UserID
+        checkSuccess = requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{UserID}/draw/?cards={cardcode}").json()
+
+        if checkSuccess["success"] != True:
+            await ctx.respond("card error", ephemeral=True)
+            return
+
+
+        # give cardcode to int(games[gameID]["players"][-1]) instead
+        lowID = int(games[gameID]["players"][0])
+        requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{lowID}/add/?cards={cardcode}")
+
+
+
+        await ctx.respond("nice", ephemeral=True)
+
+
+
+    @president.command(description="start the gameplay")
+    async def start(self, ctx):
+        pass
+
+
+
+
+
+
+
+
+
+    @president.command(description="what cards do you have in your hand?")
+    async def hand(self, ctx):
+        # check if player is in a game
+        UserID = int(ctx.author.id)
+        if (players[UserID] == None):
+            await ctx.respond("error: you're not in a game!", ephemeral=True)
+            return
+        
+        currentGameID = players[UserID]
+
+        # show hand
+        hand = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{UserID}/list/").json()
+        cardCodes = [x["code"] for x in hand["piles"][str(UserID)]["cards"]]
+
+        await ctx.respond("Your hand is: ```"+str(cardCodes)+"```", ephemeral=True)
+
+
 
 
     @commands.Cog.listener()
@@ -100,10 +195,6 @@ class startGameButton(discord.ui.View):
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
-        await self.lobbyMessage.delete_original_message()
-        await asyncio.sleep(1)
-        await interaction.message.delete()
-        await asyncio.sleep(1)
         self.stop()
 
 
