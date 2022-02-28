@@ -58,17 +58,32 @@ class president(commands.Cog):
         deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
         games[currentGameID]["deckId"] = deck['deck_id']
 
+        # tell users cards are being drawn
+        for playerID in games[currentGameID]["players"]:
+            user = await self.bot.fetch_user(int(playerID))
+            m = await user.send("drawing your cards... This will take about 15 seconds")
+            await m.delete(delay=10)
+
+
         done = True
         while done:
             for playerID in games[currentGameID]["players"]:
+                print(deck["remaining"])
                 if deck["remaining"] == 0:
                     done = False
                     break
-                card = requests.get(f"https://deckofcardsapi.com/api/deck/{deck['deck_id']}/draw/?count=1").json()
+                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count=1").json()
                 deck["remaining"] -= 1
-                pile = requests.get(f"https://deckofcardsapi.com/api/deck/{deck['deck_id']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}").json()
+                requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}")
 
-
+        # show the players their hands
+        handMessages = []
+        for playerID in games[currentGameID]["players"]:
+            user = await self.bot.fetch_user(int(playerID))
+            hand = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/list/").json()
+            cardCodes = [x["code"] for x in hand["piles"][str(playerID)]["cards"]]
+            m = await user.send("Your hand is: ```"+str(cardCodes)+"```")
+            handMessages.append(m)
         
 
 
@@ -81,13 +96,14 @@ class startGameButton(discord.ui.View):
     def __init__(self, gameID, lobbyMessage):
         self.gameID = gameID
         self.lobbyMessage = lobbyMessage
-        super().__init__(timeout=None)
+        super().__init__()
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
         await self.lobbyMessage.delete_original_message()
         await asyncio.sleep(1)
         await interaction.message.delete()
+        await asyncio.sleep(1)
         self.stop()
 
 
@@ -119,7 +135,7 @@ class mainGameMenu(discord.ui.View):
         self.embed.add_field(name=self.roles.pop(), value=str(interaction.user))
 
 
-        games["players"].append(UserID)
+        games[self.gameID]["players"].append(UserID)
 
 
         await interaction.message.edit(embed=self.embed)
