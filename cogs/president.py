@@ -58,22 +58,21 @@ class president(commands.Cog):
         deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
         games[currentGameID]["deckId"] = deck['deck_id']
 
-        # tell users cards are being drawn
-        m = await ctx.send("drawing each player their cards... This will take about 15 seconds")
 
+        everyPlayerGets = 52//len(games[currentGameID]["players"])
+        extra = 52%len(games[currentGameID]["players"])
+        for playerID in games[currentGameID]["players"]:
+            if extra > 0:
+                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count={everyPlayerGets+1}").json()
+                extra-=1
+            else:
+                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count={everyPlayerGets}").json()
 
-        done = True
-        while done:
-            for playerID in games[currentGameID]["players"]:
-                print(deck["remaining"])
-                if deck["remaining"] == 0:
-                    done = False
-                    break
-                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count=1").json()
-                deck["remaining"] -= 1
-                requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={card['cards'][0]['code']}")
+            cards = card['cards'][0]['code']
+            for i in range(1,everyPlayerGets): cards += "," + card['cards'][i]['code'] 
 
-        await m.delete()
+            requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={cards}")
+
         await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
 
         await ctx.send("```1.) if you are the president:\n" +
