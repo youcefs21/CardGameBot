@@ -142,7 +142,7 @@ class president(commands.Cog):
 
 
         # give cardcode to int(games[gameID]["players"][-1]) instead
-        lowID = int(games[gameID]["players"][0])
+        lowID = int(games[gameID]["players"][-1])
         requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{lowID}/add/?cards={cardcode}")
 
 
