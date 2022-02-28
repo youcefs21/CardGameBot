@@ -39,11 +39,12 @@ class president(commands.Cog):
         lobbyEmbed.add_field(name="President", value=str(ctx.author))
         view = mainGameMenu(players[UserID], ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
 
-        # send in lobby
-        message = await ctx.respond("Do you want to continue?", view=view, embed=lobbyEmbed)
+        # send lobby
+        lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
 
         # dm a start game button to president
-
+        startView = startGameButton(players[UserID], lobbyMessage)
+        await ctx.author.send(embed=lobbyEmbed, view=startView)
 
         await view.wait()
 
@@ -55,7 +56,22 @@ class president(commands.Cog):
         print("President module ready!")
 
 
+class startGameButton(discord.ui.View):
+    def __init__(self, gameID, lobbyMessage):
+        self.gameID = gameID
+        self.lobbyMessage = lobbyMessage
+        super().__init__(timeout=None)
 
+    @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
+    async def start(self, button, interaction):
+        await self.lobbyMessage.delete_original_message()
+        await asyncio.sleep(1)
+        await interaction.message.delete()
+        self.stop()
+
+
+
+# game lobby
 class mainGameMenu(discord.ui.View):
     def __init__(self, gameID, roles, embed):
         self.gameID = gameID
@@ -65,7 +81,7 @@ class mainGameMenu(discord.ui.View):
 
 
     @discord.ui.button(label="Join Game", style=discord.ButtonStyle.green)
-    async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def confirm(self, button, interaction):
         if len(self.roles) == 0:
             await interaction.response.send_message("`the game is full`", ephemeral=True)
             return
