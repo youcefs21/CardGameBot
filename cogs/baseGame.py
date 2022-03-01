@@ -29,6 +29,19 @@ class chooseGame(commands.Cog):
 
         await ctx.respond("Your hand is: ```"+str(cardCodes)+"```", ephemeral=True)
 
+    @slash_command(description="quit the game you are currently in")
+    async def quit(self, ctx):
+        UserID = int(ctx.author.id)
+        if (players[UserID] == None):
+            await ctx.respond("nothing to quit from", ephemeral=True)
+            return
+
+        gameID = players[UserID]
+        players[UserID] = None
+
+        games[gameID]["players"].remove(UserID)
+
+        logging.info(f"removed {UserID}, users left are {games[gameID]['players']}")
 
     @commands.Cog.listener()
     async def on_ready(self):
