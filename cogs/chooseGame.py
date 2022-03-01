@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import logging
 
 
 class chooseGame(commands.Cog):
@@ -9,7 +10,7 @@ class chooseGame(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Choose Game module ready!")
+        logging.info("Choose Game module ready!")
 
 def setup(bot):
     bot.add_cog(chooseGame(bot))

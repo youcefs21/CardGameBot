@@ -2,6 +2,11 @@ import discord
 import os
 from decouple import config
 from collections import defaultdict
+import coloredlogs, logging
+
+
+logging.basicConfig(level=logging.INFO)
+coloredlogs.install()
 
 bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
 players = defaultdict(lambda: None) # a dict of the form {userId: gameId}

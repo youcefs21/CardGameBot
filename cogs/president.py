@@ -4,7 +4,7 @@ from discord.commands import SlashCommandGroup, slash_command
 from main import players, games, nextGameID
 import asyncio
 import requests
-
+import logging
 
 class president(commands.Cog):
     
@@ -151,7 +151,7 @@ class president(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("President module ready!")
+        logging.info("President module ready!")
 
 
 class startGameButton(discord.ui.View):
