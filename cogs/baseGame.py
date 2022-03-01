@@ -78,10 +78,12 @@ class startGameButton(discord.ui.View):
     def __init__(self, gameID, lobbyMessage):
         self.gameID = gameID
         self.lobbyMessage = lobbyMessage
+        self.started = False
         super().__init__()
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
+        self.started = True
         self.stop()
         
 

@@ -55,6 +55,13 @@ class president(commands.Cog):
         await ctx.respond("Press the `Start Game!` button to start the game",view=startView, ephemeral=True)
 
         await startView.wait()
+        if not startView.started:
+            logging.info("game cancelled")
+            for playerID in games[currentGameID]["players"]:
+                players[playerID] = None
+            del games[currentGameID]
+            ctx.send("game cancelled")
+            return
 
         # deal the cards:
         deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
