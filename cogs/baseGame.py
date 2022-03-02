@@ -40,8 +40,9 @@ class chooseGame(commands.Cog):
         players[UserID] = None
 
         games[gameID]["players"].remove(UserID)
+        await ctx.respond(f"you have been removed from game #{gameID} of type {games[gameID]['gameType']}", ephemeral=True)
 
-        logging.info(f"removed {UserID}, users left are {games[gameID]['players']}")
+        # logging.info(f"removed {UserID} from game {gameID}, users left are {games[gameID]['players']}")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -88,15 +89,14 @@ class mainGameMenu(discord.ui.View):
 
 
 class startGameButton(discord.ui.View):
-    def __init__(self, gameID, lobbyMessage):
-        self.gameID = gameID
-        self.lobbyMessage = lobbyMessage
+    def __init__(self):
         self.started = False
         super().__init__()
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
         self.started = True
+        await interaction.delete_original_message()
         self.stop()
         
 

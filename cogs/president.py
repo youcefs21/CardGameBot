@@ -36,7 +36,7 @@ class president(commands.Cog):
 
         # initialize game 
         games[currentGameID] = {
-            "gameType": "president",
+            "gameType": "President",
             "deckId": None,
             "turnCount": 0,
             "players": [UserID]
@@ -51,7 +51,7 @@ class president(commands.Cog):
         lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
 
         # send a secret start game button to president
-        startView = startGameButton(currentGameID, lobbyMessage)
+        startView = startGameButton()
         await ctx.respond("Press the `Start Game!` button to start the game",view=startView, ephemeral=True)
 
         await startView.wait()
@@ -62,6 +62,9 @@ class president(commands.Cog):
             del games[currentGameID]
             ctx.send("game cancelled")
             return
+
+        view.stop()
+        await lobbyMessage.delete()
 
         # deal the cards:
         deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
