@@ -3,15 +3,25 @@ import os
 from decouple import config
 from collections import defaultdict
 import coloredlogs, logging
+from typing import TypedDict, List, Dict
+from cardsAPI import Deck
 
 
 logging.basicConfig(level=logging.INFO)
 coloredlogs.install()
 
 bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
-players = defaultdict(lambda: None) # a dict of the form {userId: gameId}
-games = {} # a dict of the form {gameId: (deckId, turnCount, [list of players], {gameSpecificArgs})}
-nextGameID = 0
+# a dict of the form {userId: deckId}
+players: Dict[int, str] = defaultdict(lambda: None) 
+
+class Game(TypedDict):
+    gameType: str
+    deck: Deck
+    turnCount: int
+    players: List[int]
+
+games: Dict[str, Game] = {}
+
 
 # loading all the extensions
 for filename in os.listdir('./cogs'):

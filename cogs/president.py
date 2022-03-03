@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
-from main import players, games, nextGameID
+from main import players, games
 from cogs.baseGame import mainGameMenu, startGameButton
 import asyncio
 import requests
@@ -21,7 +21,6 @@ class president(commands.Cog):
 
     @president.command(description="anyone in the server can join this game!")
     async def play(self, ctx):
-        global nextGameID
 
         # check that the person using the command is not already in a game
         UserID = int(ctx.author.id)
@@ -30,10 +29,11 @@ class president(commands.Cog):
             return
 
 
-        # initialize player 
-        players[UserID] = nextGameID
-        nextGameID+=1
-        gameID = players[UserID]
+        # initialize player and deck
+        deck = Deck()
+        games[deck.id]["deck"] = deck
+        players[UserID] = deck.id
+        gameID = deck.id
 
         # initialize game 
         games[gameID] = {
@@ -67,9 +67,6 @@ class president(commands.Cog):
         view.stop()
         await lobbyMessage.delete_original_message()
 
-        # deal the cards:
-        deck = Deck()
-        games[gameID]["deck"] = deck
         
         # divide the deck evenly between the players
         deck / games[gameID]["players"]
