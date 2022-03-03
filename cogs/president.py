@@ -51,7 +51,7 @@ class president(commands.Cog):
 
         # send a secret start game button to president
         startView = startGameButton()
-        await ctx.respond("Press the `Start Game!` button to start the game",view=startView, ephemeral=True)
+        startMessage = await ctx.send("Press the `Start Game!` button to start the game",view=startView)
 
         await startView.wait()
         if not startView.started:
@@ -64,6 +64,7 @@ class president(commands.Cog):
 
         view.stop()
         await lobbyMessage.delete_original_message()
+        await startMessage.delete()
 
         
         # divide the deck evenly between the players

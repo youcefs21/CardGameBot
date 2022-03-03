@@ -92,6 +92,20 @@ class startGameButton(discord.ui.View):
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
+        # check that user is in a game
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        if (gameID == None):
+            await interaction.response.send_message("error: you're not in a game", ephemeral=True)
+            return
+
+        # check that user is in the game host
+        game = games[gameID]
+        if (game["players"][0] != UserID):
+            await interaction.response.send_message("error: you're not the game host", ephemeral=True)
+            return
+
+
         self.started = True
         self.stop()
         
@@ -102,6 +116,18 @@ class nextButton(discord.ui.View):
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)
     async def start(self, button, interaction):
+        # check that user is in a game
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        if (gameID == None):
+            await interaction.response.send_message("error: you're not in a game", ephemeral=True)
+            return
+
+        # check that user is in the game host
+        game = games[gameID]
+        if (game["players"][0] != UserID):
+            await interaction.response.send_message("error: you're not the game host", ephemeral=True)
+            return
         self.started = True
         self.stop()
 
