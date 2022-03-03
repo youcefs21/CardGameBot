@@ -13,14 +13,11 @@ class president(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    president = SlashCommandGroup("president", "start a game of president!")
+    play = SlashCommandGroup("play", "play a card game!")
 
-    # @president.command(description="only users listed can join this game!")
-    # async def private(self, ctx):
-    #     await ctx.respond("error: not implemented")
 
-    @president.command(description="anyone in the server can join this game!")
-    async def play(self, ctx):
+    @play.command(description="a game of president")
+    async def president(self, ctx):
 
         # check that the person using the command is not already in a game
         UserID = int(ctx.author.id)
@@ -75,15 +72,15 @@ class president(commands.Cog):
         # divide the deck evenly between the players
         deck / games[gameID]["players"]
 
-        await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
-
-        await ctx.send("```1.) if you are the president:\n" +
+        m = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
+        await m.delete(delay=30)
+        m = await ctx.send("```1.) if you are the president:\n" +
                         "   - use `/give <cardCode>` to give the lowest ranking player a card\n" +
                         "   - once everyone is ready, use `/start` to start the game\n" +
                         "2.) if you are the lowest ranking player:\n" +
                         "   - use `/give <cardCode>` to give the president your best card\n```"
                         )
-
+        await m.delete(delay=30)
 
 
 
@@ -118,9 +115,6 @@ class president(commands.Cog):
 
 
 
-    @slash_command(description="start the gameplay")
-    async def start(self, ctx):
-        pass
 
 
 

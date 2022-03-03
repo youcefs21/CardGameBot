@@ -7,8 +7,7 @@ from typing import TypedDict, List, Dict
 from cardsAPI import Deck
 
 
-logging.basicConfig(level=logging.INFO)
-coloredlogs.install()
+coloredlogs.install(level=logging.INFO)
 
 bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
 # a dict of the form {userId: deckId}

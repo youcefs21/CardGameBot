@@ -41,6 +41,10 @@ class chooseGame(commands.Cog):
 
         logging.info(f"removed {UserID} from game {gameID}, users left are {games[gameID]['players']}")
 
+    @slash_command(name="next", description="move on to the next phase")
+    async def nxt(self, ctx):
+        pass
+
     @commands.Cog.listener()
     async def on_ready(self):
         logging.info("Base Game module ready!")
