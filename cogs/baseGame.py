@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, slash_command
+from discord.commands import slash_command
 from main import players, games
 import asyncio
 import requests
 import logging
 
 
-class chooseGame(commands.Cog):
+class baseGame(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot
@@ -105,4 +105,4 @@ class startGameButton(discord.ui.View):
 
 
 def setup(bot):
-    bot.add_cog(chooseGame(bot))
+    bot.add_cog(baseGame(bot))

@@ -13,10 +13,7 @@ class president(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    play = SlashCommandGroup("play", "play a card game!")
 
-
-    @play.command(description="a game of president")
     async def president(self, ctx):
 
         # check that the person using the command is not already in a game
@@ -85,7 +82,7 @@ class president(commands.Cog):
 
 
 
-    @slash_command(description="give the president a card")
+    @slash_command(description="give a card")
     async def give(self, ctx, cardcode):
         # check if player is in a game
         UserID = int(ctx.author.id)
