@@ -6,6 +6,7 @@ from cogs.baseGame import mainGameMenu, startGameButton
 import asyncio
 import requests
 import logging
+from cardsAPI import Deck
 
 class president(commands.Cog):
     
@@ -32,12 +33,12 @@ class president(commands.Cog):
         # initialize player 
         players[UserID] = nextGameID
         nextGameID+=1
-        currentGameID = players[UserID]
+        gameID = players[UserID]
 
         # initialize game 
-        games[currentGameID] = {
+        games[gameID] = {
             "gameType": "President",
-            "deckId": None,
+            "deck": None,
             "turnCount": 0,
             "players": [UserID]
             }
@@ -45,7 +46,7 @@ class president(commands.Cog):
         # initialize lobby components
         lobbyEmbed = discord.Embed(title="A game of President!",description="awaiting players...")
         lobbyEmbed.add_field(name="President", value=str(ctx.author))
-        view = mainGameMenu(currentGameID, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
+        view = mainGameMenu(gameID, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
 
         # send lobby
         lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
@@ -57,33 +58,21 @@ class president(commands.Cog):
         await startView.wait()
         if not startView.started:
             logging.info("game cancelled")
-            for playerID in games[currentGameID]["players"]:
+            for playerID in games[gameID]["players"]:
                 players[playerID] = None
-            del games[currentGameID]
+            del games[gameID]
             ctx.send("game cancelled")
             return
 
         view.stop()
-        await lobbyMessage.delete()
+        await lobbyMessage.delete_original_message()
 
         # deal the cards:
-        deck = requests.get("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").json()
-        games[currentGameID]["deckId"] = deck['deck_id']
-
-
-        everyPlayerGets = 52//len(games[currentGameID]["players"])
-        extra = 52%len(games[currentGameID]["players"])
-        for playerID in games[currentGameID]["players"]:
-            if extra > 0:
-                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count={everyPlayerGets+1}").json()
-                extra-=1
-            else:
-                card = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/draw/?count={everyPlayerGets}").json()
-
-            cards = card['cards'][0]['code']
-            for i in range(1,everyPlayerGets): cards += "," + card['cards'][i]['code'] 
-
-            requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{playerID}/add/?cards={cards}")
+        deck = Deck()
+        games[gameID]["deck"] = deck
+        
+        # divide the deck evenly between the players
+        deck / games[gameID]["players"]
 
         await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
 
@@ -106,6 +95,7 @@ class president(commands.Cog):
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
         gameID = players[UserID]
+        piles = games[gameID]["deck"].piles
 
         # check if the person using is the lowest player
         if int(games[gameID]["players"][-1]) == UserID:
@@ -118,20 +108,12 @@ class president(commands.Cog):
             await ctx.respond("you are not the president, nor the lowest ranking player", ephemeral=True)
             return
 
-
-
         # take away cardcode from UserID
-        checkSuccess = requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{UserID}/draw/?cards={cardcode}").json()
-        if checkSuccess["success"] != True:
-            await ctx.respond("card error", ephemeral=True)
+        if (piles[presID] + [piles[UserID].pick(cardcode)]) == False:
+            await ctx.respond("card not found", ephemeral=True)
             return
 
-
-        # give cardcode to other player
-        requests.get(f"https://deckofcardsapi.com/api/deck/{games[gameID]['deckId']}/pile/{presID}/add/?cards={cardcode}")
-
-
-        await ctx.respond("nice", ephemeral=True)
+        await ctx.respond("card sent successfully", ephemeral=True)
 
 
 

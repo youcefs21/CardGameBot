@@ -56,6 +56,10 @@ class Pile:
 
     def __add__(self, cards: List[Card]):
 
+        if None in cards:
+            logging.warning("failed to add cards, None detected")
+            return False
+
         cardsStr = "?cards=" + str(cards[0])
         for i in range(1, len(cards)):
             cardsStr += "," + cards[i].id
@@ -63,6 +67,18 @@ class Pile:
         requests.get(f"{baseURL}/{self.parent}/pile/{self.id}/add/{cardsStr}")
 
         self.remaining += len(cards)
+        return True
+
+    def __repr__(self):
+        pileJSON = requests.get(
+            f"{baseURL}/{self.parent}/pile/{self.id}/list"
+        ).json()
+
+        if not pileJSON["success"]:
+            return "<Empty Pile>"
+        
+        return str([x["code"] for x in pileJSON["piles"][str(self.id)]["cards"]])
+
 
 
 

@@ -21,13 +21,10 @@ class chooseGame(commands.Cog):
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
         
-        currentGameID = players[UserID]
+        gameID = players[UserID]
+        hand = games[gameID]["deck"].piles[UserID]
 
-        # show hand
-        hand = requests.get(f"https://deckofcardsapi.com/api/deck/{games[currentGameID]['deckId']}/pile/{UserID}/list/").json()
-        cardCodes = [x["code"] for x in hand["piles"][str(UserID)]["cards"]]
-
-        await ctx.respond("Your hand is: ```"+str(cardCodes)+"```", ephemeral=True)
+        await ctx.respond("Your hand is: ```"+str(hand)+"```", ephemeral=True)
 
     @slash_command(description="quit the game you are currently in")
     async def quit(self, ctx):
@@ -42,7 +39,7 @@ class chooseGame(commands.Cog):
         games[gameID]["players"].remove(UserID)
         await ctx.respond(f"you have been removed from game #{gameID} of type {games[gameID]['gameType']}", ephemeral=True)
 
-        # logging.info(f"removed {UserID} from game {gameID}, users left are {games[gameID]['players']}")
+        logging.info(f"removed {UserID} from game {gameID}, users left are {games[gameID]['players']}")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -96,7 +93,6 @@ class startGameButton(discord.ui.View):
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
         self.started = True
-        await interaction.delete_original_message()
         self.stop()
         
 
