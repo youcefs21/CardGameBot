@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
 from main import players, games
-from cogs.baseGame import mainGameMenu, startGameButton
+from cogs.baseGame import mainGameMenu, startGameButton, nextButton
 import asyncio
 import requests
 import logging
@@ -69,15 +69,28 @@ class president(commands.Cog):
         # divide the deck evenly between the players
         deck / games[gameID]["players"]
 
-        m = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
-        await m.delete(delay=30)
-        m = await ctx.send("```1.) if you are the president:\n" +
+        nextView = nextButton()
+        instructions = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand\n"+
+                        "```1.) if you are the president:\n" +
                         "   - use `/give <cardCode>` to give the lowest ranking player a card\n" +
-                        "   - once everyone is ready, use `/start` to start the game\n" +
+                        "   - once everyone is ready, press the `next` button to start round 1\n" +
                         "2.) if you are the lowest ranking player:\n" +
-                        "   - use `/give <cardCode>` to give the president your best card\n```"
+                        "   - use `/give <cardCode>` to give the president your best card\n```",
+                        view=nextView
                         )
-        await m.delete(delay=30)
+
+        await nextView.wait()
+        if not nextView.started:
+            logging.info("game cancelled")
+            for playerID in games[gameID]["players"]:
+                players[playerID] = None
+            del games[gameID]
+            ctx.send("game cancelled")
+            return
+
+
+        await instructions.delete()
+
 
 
 
