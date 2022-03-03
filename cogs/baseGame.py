@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
-from main import players, games, nextGameID
+from main import players, games
 import asyncio
 import requests
 import logging

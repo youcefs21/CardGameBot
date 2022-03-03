@@ -29,10 +29,8 @@ class president(commands.Cog):
             return
 
 
-        # initialize player and deck
+        # initialize deck
         deck = Deck()
-        games[deck.id]["deck"] = deck
-        players[UserID] = deck.id
         gameID = deck.id
 
         # initialize game 
@@ -42,6 +40,12 @@ class president(commands.Cog):
             "turnCount": 0,
             "players": [UserID]
             }
+
+        # initialize player
+        games[gameID]["deck"] = deck
+        players[UserID] = gameID
+
+
 
         # initialize lobby components
         lobbyEmbed = discord.Embed(title="A game of President!",description="awaiting players...")
