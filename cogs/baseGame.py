@@ -142,8 +142,19 @@ class CardButton(discord.ui.Button):
         )
 
     async def callback(self, interaction):
-        logging.info(f"{card} button has been clicked")
+        logging.info(f"{self.card} button has been clicked")
 
+class passButton(discord.ui.Button):
+    def __init__(self):
+        
+        super().__init__(
+            label="pass",
+            style=discord.enums.ButtonStyle.secondary,
+            custom_id="pass"
+        )
+
+    async def callback(self, interaction):
+        logging.info(f"pass button has been clicked")
 
 def setup(bot):
     bot.add_cog(baseGame(bot))
