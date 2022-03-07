@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, slash_command
+from discord.commands import slash_command
 from main import players, games
 import asyncio
 import requests
 import logging
 
 
-class chooseGame(commands.Cog):
+class baseGame(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot
@@ -40,10 +40,6 @@ class chooseGame(commands.Cog):
         await ctx.respond(f"you have been removed from game #{gameID} of type {games[gameID]['gameType']}", ephemeral=True)
 
         logging.info(f"removed {UserID} from game {gameID}, users left are {games[gameID]['players']}")
-
-    @slash_command(name="next", description="move on to the next phase")
-    async def nxt(self, ctx):
-        pass
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -96,10 +92,44 @@ class startGameButton(discord.ui.View):
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
     async def start(self, button, interaction):
+        # check that user is in a game
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        if (gameID == None):
+            await interaction.response.send_message("error: you're not in a game", ephemeral=True)
+            return
+
+        # check that user is in the game host
+        game = games[gameID]
+        if (game["players"][0] != UserID):
+            await interaction.response.send_message("error: you're not the game host", ephemeral=True)
+            return
+
+
         self.started = True
         self.stop()
         
+class nextButton(discord.ui.View):
+    def __init__(self):
+        self.started = False
+        super().__init__()
 
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)
+    async def start(self, button, interaction):
+        # check that user is in a game
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        if (gameID == None):
+            await interaction.response.send_message("error: you're not in a game", ephemeral=True)
+            return
+
+        # check that user is in the game host
+        game = games[gameID]
+        if (game["players"][0] != UserID):
+            await interaction.response.send_message("error: you're not the game host", ephemeral=True)
+            return
+        self.started = True
+        self.stop()
 
 
 class CardButton(discord.ui.Button):
@@ -116,4 +146,4 @@ class CardButton(discord.ui.Button):
 
 
 def setup(bot):
-    bot.add_cog(chooseGame(bot))
+    bot.add_cog(baseGame(bot))

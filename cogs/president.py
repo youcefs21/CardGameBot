@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
 from main import players, games
-from cogs.baseGame import mainGameMenu, startGameButton, CardButton
+from cogs.baseGame import mainGameMenu, startGameButton, CardButton, nextButton
 import asyncio
 import requests
 import logging
@@ -13,10 +13,7 @@ class president(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    play = SlashCommandGroup("play", "play a card game!")
 
-
-    @play.command(description="a game of president")
     async def president(self, ctx):
 
         # check that the person using the command is not already in a game
@@ -54,7 +51,7 @@ class president(commands.Cog):
 
         # send a secret start game button to president
         startView = startGameButton()
-        await ctx.respond("Press the `Start Game!` button to start the game",view=startView, ephemeral=True)
+        startMessage = await ctx.send("Press the `Start Game!` button to start the game",view=startView)
 
         await startView.wait()
         if not startView.started:
@@ -67,20 +64,33 @@ class president(commands.Cog):
 
         view.stop()
         await lobbyMessage.delete_original_message()
+        await startMessage.delete()
 
         
         # divide the deck evenly between the players
         deck / games[gameID]["players"]
 
-        m = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand")
-        await m.delete(delay=30)
-        m = await ctx.send("```1.) if you are the president:\n" +
+        nextView = nextButton()
+        instructions = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand\n"+
+                        "```1.) if you are the president:\n" +
                         "   - use `/give <cardCode>` to give the lowest ranking player a card\n" +
-                        "   - once everyone is ready, use `/start` to start the game\n" +
+                        "   - once everyone is ready, press the `next` button to start round 1\n" +
                         "2.) if you are the lowest ranking player:\n" +
-                        "   - use `/give <cardCode>` to give the president your best card\n```"
+                        "   - use `/give <cardCode>` to give the president your best card\n```",
+                        view=nextView
                         )
-        await m.delete(delay=30)
+
+        await nextView.wait()
+        if not nextView.started:
+            logging.info("game cancelled")
+            for playerID in games[gameID]["players"]:
+                players[playerID] = None
+            del games[gameID]
+            ctx.send("game cancelled")
+            return
+
+
+        await instructions.delete()
 
         view = discord.ui.View()
 
@@ -93,7 +103,8 @@ class president(commands.Cog):
 
 
 
-    @slash_command(description="give the president a card")
+
+    @slash_command(description="give a card")
     async def give(self, ctx, cardcode):
         # check if player is in a game
         UserID = int(ctx.author.id)
