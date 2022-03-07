@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
 from main import players, games
-from cogs.baseGame import mainGameMenu, startGameButton, CardButton, nextButton
+import cogs.baseGame as base
 import asyncio
 import requests
 import logging
@@ -44,13 +44,13 @@ class president(commands.Cog):
         # initialize lobby components
         lobbyEmbed = discord.Embed(title="A game of President!",description="awaiting players...")
         lobbyEmbed.add_field(name="President", value=str(ctx.author))
-        view = mainGameMenu(gameID, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
+        view = base.mainGameMenu(gameID, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobbyEmbed)
 
         # send lobby
         lobbyMessage = await ctx.respond(view=view, embed=lobbyEmbed)
 
         # send a secret start game button to president
-        startView = startGameButton()
+        startView = base.startGameButton()
         startMessage = await ctx.send("Press the `Start Game!` button to start the game",view=startView)
 
         await startView.wait()
@@ -70,7 +70,7 @@ class president(commands.Cog):
         # divide the deck evenly between the players
         deck / games[gameID]["players"]
 
-        nextView = nextButton()
+        nextView = base.nextButton()
         instructions = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand\n"+
                         "```1.) if you are the president:\n" +
                         "   - use `/give <cardCode>` to give the lowest ranking player a card\n" +
@@ -97,7 +97,7 @@ class president(commands.Cog):
         cards = deck.piles[UserID].toList()
 
         for card in cards[:24]:
-            view.add_item(CardButton(card))
+            view.add_item(base.CardButton(card))
 
         await ctx.respond("pick a card or pass, no action for 5 seconds is an auto-pass", view=view)
 
