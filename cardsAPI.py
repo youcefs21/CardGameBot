@@ -1,8 +1,11 @@
-import requests
 from typing import Dict, List
-import coloredlogs, logging
+
+import coloredlogs
+import logging
+import requests
 
 baseURL = "https://deckofcardsapi.com/api/deck"
+
 
 class Deck:
 
@@ -13,38 +16,38 @@ class Deck:
         self.remaining = deck["remaining"]
         self.piles = {}
 
-
     def draw(self, n: int):
-        drawnCards = requests.get(f"{baseURL}/{self.id}/draw/?count={n}").json()
+        drawn_cards = requests.get(f"{baseURL}/{self.id}/draw/?count={n}").json()
 
-        self.remaining = drawnCards["remaining"]
-        return [Card(cardDict) for cardDict in drawnCards["cards"]]
+        self.remaining = drawn_cards["remaining"]
+        return [Card(cardDict) for cardDict in drawn_cards["cards"]]
 
+    def div(self, pile_names: List):
+        n = self.remaining // len(pile_names)
+        extra = self.remaining % len(pile_names)
 
-    def div(self, pileNames: List):
-        n = self.remaining // len(pileNames)
-        extra = self.remaining % len(pileNames)
-
-        for i,pileName in enumerate(pileNames):
+        for i, pileName in enumerate(pile_names):
             self.createPile(pileName)
-            self.piles[pileName] + self.draw(min(n + (i<extra),24))
+            self.piles[pileName] + self.draw(min(n + (i < extra), 24))
 
         return self.piles
 
-    def createPile(self, pileName):
-        self.piles[pileName] = Pile(pileName, self.id)
-        return self.piles[pileName]
+    def createPile(self, pile_name):
+        self.piles[pile_name] = Pile(pile_name, self.id)
+        return self.piles[pile_name]
+
 
 class Card:
 
-    def __init__(self, cardDict: Dict[str, str]):
-        self.img = cardDict["image"]
-        self.val = cardDict["value"]
-        self.suit = cardDict["suit"]
-        self.id = cardDict["code"]
+    def __init__(self, card_dict: Dict[str, str]):
+        self.img = card_dict["image"]
+        self.val = card_dict["value"]
+        self.suit = card_dict["suit"]
+        self.id = card_dict["code"]
 
     def __repr__(self):
         return str(self.id)
+
 
 class Pile:
 
@@ -53,46 +56,40 @@ class Pile:
         self.parent = deckId
         self.remaining = 0
 
-
     def __add__(self, cards: List[Card]):
 
         if None in cards:
             logging.warning("failed to add cards, None detected")
             return False
 
-        cardsStr = "?cards=" + str(cards[0])
+        cards_str = "?cards=" + str(cards[0])
         for i in range(1, len(cards)):
-            cardsStr += "," + cards[i].id
+            cards_str += "," + cards[i].id
 
-        requests.get(f"{baseURL}/{self.parent}/pile/{self.id}/add/{cardsStr}")
+        requests.get(f"{baseURL}/{self.parent}/pile/{self.id}/add/{cards_str}")
 
         self.remaining += len(cards)
         return True
 
     def __repr__(self):
-        pileJSON = requests.get(
+        pile_json = requests.get(
             f"{baseURL}/{self.parent}/pile/{self.id}/list"
         ).json()
 
-        if not pileJSON["success"]:
+        if not pile_json["success"]:
             return "<Empty Pile>"
-        
-        return str([x["code"] for x in pileJSON["piles"][str(self.id)]["cards"]])
 
+        return str([x["code"] for x in pile_json["piles"][str(self.id)]["cards"]])
 
     def toList(self):
-        pileJSON = requests.get(
+        pile_json = requests.get(
             f"{baseURL}/{self.parent}/pile/{self.id}/list"
         ).json()
 
-        
-        if not pileJSON["success"]:
+        if not pile_json["success"]:
             return []
 
-        return [Card(cardDict) for cardDict in pileJSON["piles"][str(self.id)]["cards"]]
-
-
-
+        return [Card(cardDict) for cardDict in pile_json["piles"][str(self.id)]["cards"]]
 
     def pick(self, card: Card):
         """pick a card, any card"""
@@ -104,7 +101,6 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/draw/?cards={str(card)}"
         ).json()
 
-
         if not response["success"]:
             logging.warning(response["error"])
             return None
@@ -113,22 +109,15 @@ class Pile:
             logging.warning("failed card pick, card list is empty")
             return None
 
-
         return Card(response["cards"][0])
-
-    
 
     def draw(self, n: int):
         """draw n random cards"""
-        drawnCards = requests.get(
+        drawn_cards = requests.get(
             f"{baseURL}/{self.parent}/pile/{self.id}/draw/random/?count={n}"
         ).json()
 
-
-        return [Card(cardDict) for cardDict in drawnCards["cards"]]
-
-
-
+        return [Card(cardDict) for cardDict in drawn_cards["cards"]]
 
 
 # testing
@@ -140,10 +129,9 @@ if __name__ == "__main__":
     cards = d.draw(5)
     logging.info(f"cards drawn from deck: {cards}")
 
-    piles = d / [123,253]
+    piles = d.div([123, 253])
     logging.info(f"pile 123 has {piles[123].remaining} cards")
     logging.info(f"pile 253 has {piles[253].remaining} cards")
-
 
     pileCard = piles[123].pick("5D")
     logging.info(f"card picked from pile: {pileCard}")
