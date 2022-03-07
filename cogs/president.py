@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, slash_command
 from main import players, games
-from cogs.baseGame import mainGameMenu, startGameButton
+from cogs.baseGame import mainGameMenu, startGameButton, CardButton
 import asyncio
 import requests
 import logging
@@ -62,7 +62,7 @@ class president(commands.Cog):
             for playerID in games[gameID]["players"]:
                 players[playerID] = None
             del games[gameID]
-            ctx.send("game cancelled")
+            await ctx.send("game cancelled")
             return
 
         view.stop()
@@ -82,6 +82,14 @@ class president(commands.Cog):
                         )
         await m.delete(delay=30)
 
+        view = discord.ui.View()
+
+        cards = deck.piles[UserID].toList()
+
+        for card in cards[:24]:
+            view.add_item(CardButton(card))
+
+        await ctx.respond("pick a card or pass, no action for 5 seconds is an auto-pass", view=view)
 
 
 

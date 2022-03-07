@@ -80,6 +80,18 @@ class Pile:
         return str([x["code"] for x in pileJSON["piles"][str(self.id)]["cards"]])
 
 
+    def toList(self):
+        pileJSON = requests.get(
+            f"{baseURL}/{self.parent}/pile/{self.id}/list"
+        ).json()
+
+        
+        if not pileJSON["success"]:
+            return []
+
+        return [Card(cardDict) for cardDict in pileJSON["piles"][str(self.id)]["cards"]]
+
+
 
 
     def pick(self, card: Card):

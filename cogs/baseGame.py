@@ -102,6 +102,17 @@ class startGameButton(discord.ui.View):
 
 
 
+class CardButton(discord.ui.Button):
+    def __init__(self, card):
+        self.card = card
+        super().__init__(
+            label=str(card),
+            style=discord.enums.ButtonStyle.primary,
+            custom_id=str(card)
+        )
+
+    async def callback(self, interaction):
+        logging.info(f"{card} button has been clicked")
 
 
 def setup(bot):
