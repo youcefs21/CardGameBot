@@ -101,7 +101,7 @@ class president(commands.Cog):
 
         view.add_item(base.passButton())
 
-        await ctx.respond("pick a card or pass, no action for 5 seconds is an auto-pass", view=view)
+        await ctx.respond("pick a card or pass, no action for 5 seconds is an auto-pass", view=view, ephemeral=True)
 
 
 

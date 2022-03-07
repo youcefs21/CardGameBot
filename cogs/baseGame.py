@@ -143,6 +143,21 @@ class CardButton(discord.ui.Button):
 
     async def callback(self, interaction):
         logging.info(f"{self.card} button has been clicked")
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        games[gameID]["deck"].piles[UserID].pick(self.card) # remove card
+        deck = games[gameID]["deck"]
+
+        view = discord.ui.View()
+        cards = deck.piles[UserID].toList()
+
+        for card in cards[:24]:
+            view.add_item(CardButton(card))
+
+        view.add_item(passButton())
+
+        await interaction.response.edit_message(view=view)
+
 
 class passButton(discord.ui.Button):
     def __init__(self):
