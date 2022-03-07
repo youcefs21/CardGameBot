@@ -142,7 +142,6 @@ class CardButton(discord.ui.Button):
         )
 
     async def callback(self, interaction):
-        logging.info(f"{self.card} button has been clicked")
         UserID = int(interaction.user.id)
         gameID = players[UserID]
         games[gameID]["deck"].piles[UserID].pick(self.card) # remove card
@@ -169,7 +168,11 @@ class passButton(discord.ui.Button):
         )
 
     async def callback(self, interaction):
-        logging.info(f"pass button has been clicked")
+        UserID = int(interaction.user.id)
+        gameID = players[UserID]
+        games[gameID]["turnCount"]+=1
+
+        await interaction.response.edit_message(content="turn passed",view=None)
 
 def setup(bot):
     bot.add_cog(baseGame(bot))
