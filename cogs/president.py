@@ -68,7 +68,7 @@ class president(commands.Cog):
 
         
         # divide the deck evenly between the players
-        deck / games[gameID]["players"]
+        deck.div(games[gameID]["players"])
 
         nextView = base.nextButton()
         instructions = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand\n"+

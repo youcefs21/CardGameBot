@@ -21,13 +21,13 @@ class Deck:
         return [Card(cardDict) for cardDict in drawnCards["cards"]]
 
 
-    def __truediv__(self, pileNames: List):
+    def div(self, pileNames: List):
         n = self.remaining // len(pileNames)
         extra = self.remaining % len(pileNames)
 
         for i,pileName in enumerate(pileNames):
             self.createPile(pileName)
-            self.piles[pileName] + self.draw(n + (i<extra))
+            self.piles[pileName] + self.draw(min(n + (i<extra),24))
 
         return self.piles
 
