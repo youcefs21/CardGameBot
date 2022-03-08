@@ -124,8 +124,9 @@ class NextButton(discord.ui.View):
 
 
 class CardButton(discord.ui.Button):
-    def __init__(self, card):
+    def __init__(self, card, origin):
         self.card = card
+        self.origin = origin
         super().__init__(
             label=str(card),
             style=discord.enums.ButtonStyle.primary,
@@ -142,27 +143,73 @@ class CardButton(discord.ui.Button):
         cards = deck.piles[user_id].toList()
 
         for card in cards[:24]:
-            view.add_item(CardButton(card))
+            view.add_item(CardButton(card, self.origin))
 
-        view.add_item(PassButton())
+        view.add_item(PassButton(self.origin))
 
         await interaction.response.edit_message(view=view)
 
 
 class PassButton(discord.ui.Button):
-    def __init__(self):
+    def __init__(self, origin):
+        self.origin = origin
         super().__init__(
             label="pass",
             style=discord.enums.ButtonStyle.secondary,
             custom_id="pass"
         )
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         user_id = int(interaction.user.id)
         game_id = players[user_id]
-        games[game_id]["turnCount"] += 1
 
         await interaction.response.edit_message(content="turn passed", view=None)
+        self.origin.stop()
+
+
+class RoundView(discord.ui.View):
+    def __init__(self):
+        self.started = False
+        super().__init__()
+
+    @discord.ui.button(label="Show Hand", style=discord.ButtonStyle.blurple)
+    async def btn(self, button, interaction: discord.Interaction):
+        # check that user is in a game
+        user_id = int(interaction.user.id)
+        game_id = players[user_id]
+        if game_id == "":
+            await interaction.response.send_message("error: you're not in a game", ephemeral=True)
+            return
+
+        # check that user is in the game host
+        turn_count = games[game_id]["turnCount"]
+        n = len(games[game_id]["players"])
+        if games[game_id]["players"][turn_count % n] != user_id:
+            await interaction.response.send_message("it's not your turn yet!", ephemeral=True)
+            return
+
+        # signal that the button was pressed
+        self.started = True
+
+        view = discord.ui.View()
+
+        deck = games[game_id]['deck']
+        cards = deck.piles[user_id].toList()
+
+        for card in cards[:24]:
+            view.add_item(CardButton(card, view))
+
+        view.add_item(PassButton(view))
+
+        await interaction.response.send_message(
+            "pick a card or pass, no action for 5 seconds is an auto-pass",
+            view=view,
+            ephemeral=True
+        )
+
+        await view.wait()
+        games[game_id]["turnCount"] += 1
+        self.stop()
 
 
 def setup(bot):

@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 import logging
 
@@ -9,10 +11,9 @@ from cardsAPI import Deck
 from main import players, games
 
 
-async def president(ctx):
-
+async def president(ctx: discord.ApplicationContext):
     # check that the person using the command is not already in a game
-    user_id = int(ctx.author.id)
+    user_id = int(ctx.user.id)
     if players[user_id] != "":
         await ctx.respond("error: you're already in a game!", ephemeral=True)
         return
@@ -77,21 +78,39 @@ async def president(ctx):
         for playerID in games[game_id]["players"]:
             players[playerID] = ""
         del games[game_id]
-        ctx.send("game cancelled")
+        await ctx.send("game cancelled")
         return
 
     await instructions.delete()
 
-    view = discord.ui.View()
+    turn_count = games[game_id]["turnCount"]
+    while turn_count > -1:
+        n = len(games[game_id]["players"])
+        next_player = games[game_id]["players"][turn_count % n]
+        round_view = Base.RoundView()
 
-    cards = deck.piles[user_id].toList()
+        m = await ctx.respond(
+            f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
+            " Will auto pass in 10 seconds",
+            view=round_view
+        )
 
-    for card in cards[:24]:
-        view.add_item(Base.CardButton(card))
+        # wait 10 seconds, then check if the show hand button was pressed
+        # if it was pressed, await round_view to stop
+        for i in range(10):
+            await asyncio.sleep(1)
+            if round_view.started:
+                break
 
-    view.add_item(Base.PassButton())
+        if round_view.started:
+            await round_view.wait()
+        # else pass the turn
+        else:
+            games[game_id]["turnCount"] += 1
 
-    await ctx.respond("pick a card or pass, no action for 5 seconds is an auto-pass", view=view, ephemeral=True)
+        turn_count = games[game_id]["turnCount"]
+
+        await m.delete()
 
 
 class President(commands.Cog):
