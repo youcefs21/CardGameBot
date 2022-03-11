@@ -53,7 +53,7 @@ class MainGameMenu(discord.ui.View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label="Join Game", style=discord.ButtonStyle.green)
-    async def joinGameButton(self, button, interaction):
+    async def joinGameButton(self, _, interaction):
         if len(self.roles) == 0:
             await interaction.response.send_message("`the game is full`", ephemeral=True)
             return
@@ -82,7 +82,7 @@ class StartGameButton(discord.ui.View):
         super().__init__()
 
     @discord.ui.button(label="Start Game!", style=discord.ButtonStyle.green)
-    async def start(self, button, interaction):
+    async def start(self, _, interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
         game_id = players[user_id]
@@ -106,7 +106,7 @@ class NextButton(discord.ui.View):
         super().__init__()
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)
-    async def start(self, button, interaction):
+    async def start(self, _, interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
         game_id = players[user_id]
@@ -160,9 +160,6 @@ class PassButton(discord.ui.Button):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        user_id = int(interaction.user.id)
-        game_id = players[user_id]
-
         await interaction.response.edit_message(content="turn passed", view=None)
         self.origin.stop()
 
@@ -173,7 +170,7 @@ class RoundView(discord.ui.View):
         super().__init__()
 
     @discord.ui.button(label="Show Hand", style=discord.ButtonStyle.blurple)
-    async def btn(self, button, interaction: discord.Interaction):
+    async def btn(self, _, interaction: discord.Interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
         game_id = players[user_id]

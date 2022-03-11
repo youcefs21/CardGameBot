@@ -83,13 +83,15 @@ async def president(ctx: discord.ApplicationContext):
 
     await instructions.delete()
 
+    games[game_id]["deck"].createPile("table")
+
     turn_count = games[game_id]["turnCount"]
     while turn_count > -1:
         n = len(games[game_id]["players"])
         next_player = games[game_id]["players"][turn_count % n]
         round_view = Base.RoundView()
 
-        m = await ctx.respond(
+        m = await ctx.send(
             f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
             " Will auto pass in 10 seconds",
             view=round_view
