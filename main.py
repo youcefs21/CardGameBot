@@ -21,6 +21,8 @@ class Game(TypedDict):
     deck: Deck
     turnCount: int
     players: List[int]
+    lastTurn: int
+    thisTurn: int
 
 
 games: Dict[str, Game] = {}

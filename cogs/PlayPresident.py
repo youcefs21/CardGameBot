@@ -27,7 +27,9 @@ async def president(ctx: discord.ApplicationContext):
         "gameType": "President",
         "deck": deck,
         "turnCount": 0,
-        "players": [user_id]
+        "players": [user_id],
+        "lastTurn": 0,
+        "thisTurn": 0,
     }
     game = games[game_id]
 
@@ -106,8 +108,10 @@ async def president(ctx: discord.ApplicationContext):
         if round_view.started:
             await round_view.wait()
 
-        game["turnCount"] += 1
+        game['turnCount'] += 1
         turn_count = game["turnCount"]
+        game['lastTurn'] = game['thisTurn']
+        game['thisTurn'] = 0
 
         await m.delete()
 

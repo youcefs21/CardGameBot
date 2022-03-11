@@ -68,6 +68,30 @@ class Card:
     def __repr__(self):
         return str(self.id)
 
+    def __int__(self):
+        num_char = self.id[0]
+        conversion_dict = {"0": 10, "J": 11, "Q": 12, "K": 13, "A": 14}
+        if num_char in conversion_dict.keys():
+            return conversion_dict[num_char]
+        return int(num_char)
+
+    def __gt__(self, other):
+        self_num = int(self)
+        try:
+            return self_num > int(other)
+        except TypeError:
+            return self_num > other
+
+    def __eq__(self, other):
+        self_num = int(self)
+        try:
+            return self_num == int(other)
+        except TypeError:
+            return self_num == other
+
+    def __ge__(self, other):
+        return self > other or self == other
+
 
 class Pile:
 

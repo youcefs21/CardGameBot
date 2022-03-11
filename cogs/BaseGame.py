@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from discord.commands import slash_command
+
+from cardsAPI import Card
 from main import users, games
 import logging
 
@@ -125,7 +127,7 @@ class NextButton(discord.ui.View):
 
 
 class CardButton(discord.ui.Button):
-    def __init__(self, card, origin):
+    def __init__(self, card: Card, origin):
         self.card = card
         self.origin = origin
         super().__init__(
@@ -137,12 +139,18 @@ class CardButton(discord.ui.Button):
     async def callback(self, interaction):
         user_id = int(interaction.user.id)
         game_id = users[user_id]
-        deck = games[game_id]["deck"]
+        game = games[game_id]
+        game['thisTurn'] = int(self.card)
+        deck = game["deck"]
         card_removed = deck.piles[user_id].pick(self.card)  # remove card
         deck.piles["table"].add([card_removed])
 
         view = discord.ui.View()
         cards = deck.piles[user_id].toList()
+        # filter out all cards that don't match the card that has been played this turn
+        # [:] notation is to filter in place rather than override the alias
+        cards[:] = list(filter(lambda temp_card: temp_card == game['thisTurn'], cards))
+        cards.sort()
 
         for card in cards[:24]:
             view.add_item(CardButton(card, self.origin))
@@ -197,6 +205,10 @@ class RoundView(discord.ui.View):
 
         deck = game['deck']
         cards = deck.piles[user_id].toList()
+        # filter out all cards that are lower than the card played last turn
+        # [:] notation is to filter in place rather than override the alias
+        cards[:] = list(filter(lambda temp_card: temp_card >= game['lastTurn'], cards))
+        cards.sort()
 
         for card in cards[:24]:
             view.add_item(CardButton(card, view))
