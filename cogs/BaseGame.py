@@ -152,6 +152,12 @@ class CardButton(discord.ui.Button):
         cards[:] = list(filter(lambda temp_card: temp_card == game['thisTurn'], cards))
         cards.sort()
 
+        # if you can't play any cards, auto pass
+        if len(cards) == 0:
+            await interaction.response.edit_message(content="you don't have any playable cards, turn passed", view=None)
+            self.origin.stop()
+            return
+
         for card in cards[:24]:
             view.add_item(CardButton(card, self.origin))
 
@@ -209,6 +215,13 @@ class RoundView(discord.ui.View):
         # [:] notation is to filter in place rather than override the alias
         cards[:] = list(filter(lambda temp_card: temp_card >= game['lastTurn'], cards))
         cards.sort()
+
+        # if you can't play any cards, auto pass
+        if len(cards) == 0:
+            await interaction.response.edit_message(content="you don't have any playable cards, turn passed", view=None)
+            view.stop()
+            self.stop()
+            return
 
         for card in cards[:24]:
             view.add_item(CardButton(card, view))
