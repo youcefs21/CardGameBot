@@ -26,7 +26,7 @@ async def president(ctx: discord.ApplicationContext):
     games[game_id] = {
         "gameType": "President",
         "deck": deck,
-        "turnCount": 0,
+        "turnCount": 1,
         "players": [user_id],
         "lastTurn": (0, 0),
         "thisTurn": (0, 0),

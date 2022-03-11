@@ -152,6 +152,17 @@ class CardButton(discord.ui.Button):
             str(cards_on_table)
         )
 
+        _, min_count = game['lastTurn']
+        _, current_count = game['thisTurn']
+
+        if min_count == current_count:
+            await interaction.response.edit_message(
+                content="you have played enough cards, turn passed",
+                view=None
+            )
+            self.origin.stop()
+            return
+
         view = discord.ui.View()
         cards = deck.piles[user_id].toList()
         # filter out all cards that don't match the card that has been played this turn
@@ -160,7 +171,10 @@ class CardButton(discord.ui.Button):
 
         # if you can't play any cards, auto pass
         if len(cards) == 0:
-            await interaction.response.edit_message(content="you don't have any playable cards, turn passed", view=None)
+            await interaction.response.edit_message(
+                content="you don't have any playable cards, turn passed",
+                view=None
+            )
             self.origin.stop()
             return
 
@@ -189,7 +203,7 @@ class PassButton(discord.ui.Button):
             min_val, min_count = game['lastTurn']
             _, current_count = game['thisTurn']
             if (min_count > current_count) and current_count != 0:
-                await interaction.response.send_message(f"you need to play at least {min_count} before passing")
+                await interaction.response.send_message(f"you need to play exactly {min_count} cards before passing")
                 return
 
         await interaction.response.edit_message(content="turn passed", view=None)
