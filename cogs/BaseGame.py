@@ -127,9 +127,10 @@ class NextButton(discord.ui.View):
 
 
 class CardButton(discord.ui.Button):
-    def __init__(self, card: Card, origin):
+    def __init__(self, card: Card, origin, table_message: discord.Message):
         self.card = card
         self.origin = origin
+        self.table_message = table_message
         super().__init__(
             label=str(card),
             style=discord.enums.ButtonStyle.primary,
@@ -144,6 +145,12 @@ class CardButton(discord.ui.Button):
         deck = game['deck']
         card_removed = deck.piles[user_id].pick(self.card)  # remove card
         deck.piles['table'].add([card_removed])
+        cards_on_table = deck.piles['table'].toList()
+
+        await self.table_message.edit(
+            content="here are the cards that are currently on the table\n" +
+            str(cards_on_table)
+        )
 
         view = discord.ui.View()
         cards = deck.piles[user_id].toList()
@@ -158,7 +165,7 @@ class CardButton(discord.ui.Button):
             return
 
         for card in cards[:24]:
-            view.add_item(CardButton(card, self.origin))
+            view.add_item(CardButton(card, self.origin, self.table_message))
 
         view.add_item(PassButton(self.origin))
 
@@ -190,8 +197,9 @@ class PassButton(discord.ui.Button):
 
 
 class RoundView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, table_message: discord.Message):
         self.started = False
+        self.table_message = table_message
         super().__init__()
 
     @discord.ui.button(label="Show Hand", style=discord.ButtonStyle.blurple)
@@ -237,7 +245,7 @@ class RoundView(discord.ui.View):
             return
 
         for card in cards[:24]:
-            view.add_item(CardButton(card, view))
+            view.add_item(CardButton(card, view, self.table_message))
 
         view.add_item(PassButton(view))
 

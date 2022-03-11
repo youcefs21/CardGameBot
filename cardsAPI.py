@@ -151,7 +151,7 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/list"
         ).json()
 
-        if not pile_json['success']:
+        if not pile_json['success'] or str(self.id) not in pile_json['piles']:
             return []
 
         return [Card(cardDict) for cardDict in pile_json['piles'][str(self.id)]['cards']]

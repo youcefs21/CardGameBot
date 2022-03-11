@@ -92,10 +92,17 @@ async def president(ctx: discord.ApplicationContext):
         turn_count = game['turnCount']
         n = len(players)
         next_player = players[turn_count % n]
-        round_view = Base.RoundView()
+
+        cards_on_table = deck.piles['table'].toList()
+        table_message = await ctx.send(
+            "here are the cards that are currently on the table\n" +
+            str(cards_on_table)
+        )
+
+        round_view = Base.RoundView(table_message)
 
         m = await ctx.send(
-            f"Round {turn_count}!\n" +
+            f"**Round {turn_count}!**\n\n" +
             f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
             "Will auto pass in 10 seconds",
             view=round_view
@@ -116,6 +123,7 @@ async def president(ctx: discord.ApplicationContext):
             game['lastTurn'] = game['thisTurn']
             game['thisTurn'] = (0, 0)
 
+        await table_message.delete()
         await m.delete()
 
     await ctx.send(f"<@{players[0]}> you win!")
