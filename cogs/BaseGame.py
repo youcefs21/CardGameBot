@@ -169,7 +169,7 @@ class CardButton(discord.ui.Button):
         # [:] notation is to filter in place rather than override the alias
         cards[:] = [x for x in cards if x == self.card]
 
-        # if you can't play any cards, auto pass
+        # auto passed after playing all cards that you can play
         if len(cards) == 0:
             await interaction.response.edit_message(
                 content="you don't have any playable cards, turn passed",
@@ -202,7 +202,14 @@ class PassButton(discord.ui.Button):
         if game['gameType'] == "President":
             min_val, min_count = game['lastTurn']
             _, current_count = game['thisTurn']
-            if (min_count > current_count) and current_count != 0:
+            logging.info(f"played count: {current_count}, pass count: {game['passCounter']}")
+            if current_count == 0:
+                game['passCounter'] += 1
+                await interaction.response.edit_message(content="turn passed", view=None)
+                self.origin.stop()
+                return
+
+            if min_count > current_count:
                 await interaction.response.send_message(f"you need to play exactly {min_count} cards before passing")
                 return
 
@@ -268,7 +275,9 @@ class RoundView(discord.ui.View):
             view=view,
             ephemeral=True
         )
-        game['passCounter'] = 0
+        _, current_count = game['thisTurn']
+        if current_count != 0:
+            game['passCounter'] = 0
 
         await view.wait()
         self.stop()

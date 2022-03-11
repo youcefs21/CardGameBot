@@ -88,16 +88,27 @@ async def president(ctx: discord.ApplicationContext):
     deck.createPile("table")
     deck.createPile("discard")
 
+    # Main game loop
     while len(players) > 1:
         turn_count = game['turnCount']
         n = len(players)
         next_player = players[turn_count % n]
 
-        cards_on_table = deck.piles['table'].toList()
-        table_message = await ctx.send(
-            "here are the cards that are currently on the table\n" +
-            str(cards_on_table)
-        )
+        if game['passCounter'] >= n and game['lastTurn'] != (0, 0):
+            game['passCounter'] = 0
+            table_cards = deck.piles['table'].draw(deck.piles['table'].remaining)
+            deck.piles['discard'].add(table_cards)
+            game['lastTurn'] = (0, 0)
+            game['thisTurn'] = (0, 0)
+            table_message = await ctx.send(
+                "All players have passed, table cleared"
+            )
+        else:
+            cards_on_table = deck.piles['table'].toList()
+            table_message = await ctx.send(
+                "here are the cards that are currently on the table\n" +
+                str(cards_on_table)
+            )
 
         round_view = Base.RoundView(table_message)
 
@@ -117,6 +128,8 @@ async def president(ctx: discord.ApplicationContext):
 
         if round_view.started:
             await round_view.wait()
+        else:
+            game['passCounter'] += 1
 
         game['turnCount'] += 1
         if game['thisTurn'] != (0, 0):
