@@ -12,8 +12,8 @@ class Deck:
     def __init__(self):
         deck = requests.get(f"{baseURL}/new/shuffle/?deck_count=1").json()
 
-        self.id: str = deck["deck_id"]
-        self.remaining: int = deck["remaining"]
+        self.id: str = deck['deck_id']
+        self.remaining: int = deck['remaining']
         self.piles: Dict[Union[int, str], Pile] = {}
 
     def draw(self, n: int):
@@ -25,8 +25,8 @@ class Deck:
         """
         drawn_cards = requests.get(f"{baseURL}/{self.id}/draw/?count={n}").json()
 
-        self.remaining = drawn_cards["remaining"]
-        return [Card(cardDict) for cardDict in drawn_cards["cards"]]
+        self.remaining = drawn_cards['remaining']
+        return [Card(cardDict) for cardDict in drawn_cards['cards']]
 
     def div(self, pile_names: List[Union[int, str]]):
         """
@@ -60,10 +60,10 @@ class Deck:
 class Card:
 
     def __init__(self, card_dict: Dict[str, str]):
-        self.img = card_dict["image"]
-        self.val = card_dict["value"]
-        self.suit = card_dict["suit"]
-        self.id = card_dict["code"]
+        self.img = card_dict['image']
+        self.val = card_dict['value']
+        self.suit = card_dict['suit']
+        self.id = card_dict['code']
 
     def __repr__(self):
         return str(self.id)
@@ -126,10 +126,10 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/list"
         ).json()
 
-        if not pile_json["success"]:
+        if not pile_json['success']:
             return "<Empty Pile>"
 
-        return str([x["code"] for x in pile_json["piles"][str(self.id)]["cards"]])
+        return str([x['code'] for x in pile_json['piles'][str(self.id)]['cards']])
 
     def toList(self):
         """
@@ -139,10 +139,10 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/list"
         ).json()
 
-        if not pile_json["success"]:
+        if not pile_json['success']:
             return []
 
-        return [Card(cardDict) for cardDict in pile_json["piles"][str(self.id)]["cards"]]
+        return [Card(cardDict) for cardDict in pile_json['piles'][str(self.id)]['cards']]
 
     def pick(self, card: Union[Card, str]):
         """
@@ -159,15 +159,15 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/draw/?cards={str(card)}"
         ).json()
 
-        if not response["success"]:
-            logging.warning(response["error"])
+        if not response['success']:
+            logging.warning(response['error'])
             return None
 
-        if len(response["cards"]) == 0:
+        if len(response['cards']) == 0:
             logging.warning("failed card pick, card list is empty")
             return None
 
-        return Card(response["cards"][0])
+        return Card(response['cards'][0])
 
     def draw(self, n: int):
         """
@@ -180,7 +180,7 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/draw/random/?count={n}"
         ).json()
 
-        return [Card(cardDict) for cardDict in drawn_cards["cards"]]
+        return [Card(cardDict) for cardDict in drawn_cards['cards']]
 
 
 # testing

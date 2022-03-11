@@ -35,12 +35,12 @@ async def president(ctx: discord.ApplicationContext):
 
     # initialize user and players
     users[user_id] = game_id
-    players = game["players"]
+    players = game['players']
 
     # initialize lobby components
     lobby_embed = discord.Embed(title="A game of President!", description="awaiting players...")
     lobby_embed.add_field(name="President", value=str(ctx.author))
-    view = Base.MainGameMenu(game_id, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobby_embed)
+    view = Base.MainGameMenu(game_id, ['Scum", "High-Scum", "Citizen", "Vice-President'], lobby_embed)
 
     # send lobby
     lobby_message = await ctx.respond(view=view, embed=lobby_embed)
@@ -86,7 +86,7 @@ async def president(ctx: discord.ApplicationContext):
 
     deck.createPile("table")
 
-    turn_count = game["turnCount"]
+    turn_count = game['turnCount']
     while turn_count > -1:
         n = len(players)
         next_player = players[turn_count % n]
@@ -109,7 +109,7 @@ async def president(ctx: discord.ApplicationContext):
             await round_view.wait()
 
         game['turnCount'] += 1
-        turn_count = game["turnCount"]
+        turn_count = game['turnCount']
         game['lastTurn'] = game['thisTurn']
         game['thisTurn'] = 0
 
@@ -129,8 +129,8 @@ class President(commands.Cog):
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
         game_id = users[user_id]
-        piles = games[game_id]["deck"].piles
-        players = games[game_id]["players"]
+        piles = games[game_id]['deck'].piles
+        players = games[game_id]['players']
 
         # check if the person using is the lowest player
         if int(players[-1]) == user_id:

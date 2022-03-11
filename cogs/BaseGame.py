@@ -21,7 +21,7 @@ class BaseGame(commands.Cog):
             return
 
         game_id = users[user_id]
-        hand = games[game_id]["deck"].piles[user_id]
+        hand = games[game_id]['deck'].piles[user_id]
 
         await ctx.respond("Your hand is: ```" + str(hand) + "```", ephemeral=True)
 
@@ -34,7 +34,7 @@ class BaseGame(commands.Cog):
 
         game_id = users[user_id]
         users[user_id] = ""
-        players = games[game_id]["players"]
+        players = games[game_id]['players']
 
         players.remove(user_id)
         await ctx.respond(f"you have been removed from a game of {games[game_id]['gameType']}",
@@ -70,7 +70,7 @@ class MainGameMenu(discord.ui.View):
         users[user_id] = self.gameID
         self.embed.add_field(name=self.roles.pop(), value=str(interaction.user))
 
-        games[self.gameID]["players"].append(user_id)
+        games[self.gameID]['players'].append(user_id)
 
         await interaction.message.edit(embed=self.embed)
         await interaction.response.send_message("you're now part of the game!", ephemeral=True)
@@ -94,7 +94,7 @@ class StartGameButton(discord.ui.View):
             return
 
         # check that user is in the game host
-        players = games[game_id]["players"]
+        players = games[game_id]['players']
         if players[0] != user_id:
             await interaction.response.send_message("error: you're not the game host", ephemeral=True)
             return
@@ -118,7 +118,7 @@ class NextButton(discord.ui.View):
             return
 
         # check that user is in the game host
-        players = games[game_id]["players"]
+        players = games[game_id]['players']
         if players[0] != user_id:
             await interaction.response.send_message("error: you're not the game host", ephemeral=True)
             return
@@ -141,9 +141,9 @@ class CardButton(discord.ui.Button):
         game_id = users[user_id]
         game = games[game_id]
         game['thisTurn'] = int(self.card)
-        deck = game["deck"]
+        deck = game['deck']
         card_removed = deck.piles[user_id].pick(self.card)  # remove card
-        deck.piles["table"].add([card_removed])
+        deck.piles['table'].add([card_removed])
 
         view = discord.ui.View()
         cards = deck.piles[user_id].toList()
@@ -195,7 +195,7 @@ class RoundView(discord.ui.View):
             return
 
         game = games[game_id]
-        turn_count = game["turnCount"]
+        turn_count = game['turnCount']
         players = game['players']
         n = len(players)
 
