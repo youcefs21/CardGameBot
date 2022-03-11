@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from typing import TypedDict, List, Dict
+from typing import TypedDict, List, Dict, Tuple
 
 import coloredlogs
 import discord
@@ -21,8 +21,9 @@ class Game(TypedDict):
     deck: Deck
     turnCount: int
     players: List[int]
-    lastTurn: int
-    thisTurn: int
+    lastTurn: Tuple[int, int]  # value, count
+    thisTurn: Tuple[int, int]  # value, count
+    passCounter: int
 
 
 games: Dict[str, Game] = {}

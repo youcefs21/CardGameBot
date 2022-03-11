@@ -140,7 +140,7 @@ class CardButton(discord.ui.Button):
         user_id = int(interaction.user.id)
         game_id = users[user_id]
         game = games[game_id]
-        game['thisTurn'] = int(self.card)
+        game['thisTurn'] = (int(self.card), game['thisTurn'][1] + 1)
         deck = game['deck']
         card_removed = deck.piles[user_id].pick(self.card)  # remove card
         deck.piles['table'].add([card_removed])
@@ -149,8 +149,7 @@ class CardButton(discord.ui.Button):
         cards = deck.piles[user_id].toList()
         # filter out all cards that don't match the card that has been played this turn
         # [:] notation is to filter in place rather than override the alias
-        cards[:] = list(filter(lambda temp_card: temp_card == game['thisTurn'], cards))
-        cards.sort()
+        cards[:] = [x for x in cards if x == self.card]
 
         # if you can't play any cards, auto pass
         if len(cards) == 0:
@@ -176,6 +175,16 @@ class PassButton(discord.ui.Button):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        user_id = int(interaction.user.id)
+        game_id = users[user_id]
+        game = games[game_id]
+        if game['gameType'] == "President":
+            min_val, min_count = game['lastTurn']
+            _, current_count = game['thisTurn']
+            if (min_count > current_count) and current_count != 0:
+                await interaction.response.send_message(f"you need to play at least {min_count} before passing")
+                return
+
         await interaction.response.edit_message(content="turn passed", view=None)
         self.origin.stop()
 
@@ -211,14 +220,18 @@ class RoundView(discord.ui.View):
 
         deck = game['deck']
         cards = deck.piles[user_id].toList()
+        dist = deck.piles[user_id].distribution
+        min_val, min_count = game['lastTurn']
         # filter out all cards that are lower than the card played last turn
         # [:] notation is to filter in place rather than override the alias
-        cards[:] = list(filter(lambda temp_card: temp_card >= game['lastTurn'], cards))
+        cards[:] = [x for x in cards if (x >= min_val) and (dist[int(x)] >= min_count)]
+
         cards.sort()
 
         # if you can't play any cards, auto pass
         if len(cards) == 0:
             await interaction.response.edit_message(content="you don't have any playable cards, turn passed", view=None)
+            game['passCounter'] += 1
             view.stop()
             self.stop()
             return
@@ -233,6 +246,7 @@ class RoundView(discord.ui.View):
             view=view,
             ephemeral=True
         )
+        game['passCounter'] = 0
 
         await view.wait()
         self.stop()

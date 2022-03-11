@@ -57,6 +57,19 @@ class Deck:
         return self.piles[pile_name]
 
 
+def card_id_to_int(card_id: str):
+    """
+
+    :param card_id: id of card you want to convert to an integer
+    :return: an integer representation of the card id
+    """
+    num_char = card_id[0]
+    conversion_dict = {"0": 10, "J": 11, "Q": 12, "K": 13, "A": 14}
+    if num_char in conversion_dict.keys():
+        return conversion_dict[num_char]
+    return int(num_char)
+
+
 class Card:
 
     def __init__(self, card_dict: Dict[str, str]):
@@ -69,11 +82,7 @@ class Card:
         return str(self.id)
 
     def __int__(self):
-        num_char = self.id[0]
-        conversion_dict = {"0": 10, "J": 11, "Q": 12, "K": 13, "A": 14}
-        if num_char in conversion_dict.keys():
-            return conversion_dict[num_char]
-        return int(num_char)
+        return card_id_to_int(self.id)
 
     def __gt__(self, other):
         self_num = int(self)
@@ -99,6 +108,7 @@ class Pile:
         self.id = pile_id
         self.parent = deck_id
         self.remaining = 0
+        self.distribution = [0 for _ in range(15)]
 
     def add(self, pile_cards: List[Card]):
         """
@@ -119,6 +129,8 @@ class Pile:
         requests.get(f"{baseURL}/{self.parent}/pile/{self.id}/add/{cards_str}")
 
         self.remaining += len(pile_cards)
+        for card in pile_cards:
+            self.distribution[int(card)] += 1
         return True
 
     def __repr__(self):
@@ -166,6 +178,10 @@ class Pile:
         if len(response['cards']) == 0:
             logging.warning("failed card pick, card list is empty")
             return None
+        if type(card) == Card:
+            self.distribution[int(card)] -= 1
+        else:
+            self.distribution[card_id_to_int(card)] -= 1
 
         return Card(response['cards'][0])
 
@@ -180,7 +196,12 @@ class Pile:
             f"{baseURL}/{self.parent}/pile/{self.id}/draw/random/?count={n}"
         ).json()
 
-        return [Card(cardDict) for cardDict in drawn_cards['cards']]
+        card_list = [Card(cardDict) for cardDict in drawn_cards['cards']]
+
+        for card in card_list:
+            self.distribution[int(card)] -= 1
+
+        return card_list
 
 
 # testing

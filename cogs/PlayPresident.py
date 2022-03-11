@@ -28,8 +28,9 @@ async def president(ctx: discord.ApplicationContext):
         "deck": deck,
         "turnCount": 0,
         "players": [user_id],
-        "lastTurn": 0,
-        "thisTurn": 0,
+        "lastTurn": (0, 0),
+        "thisTurn": (0, 0),
+        "passCounter": 0
     }
     game = games[game_id]
 
@@ -40,7 +41,7 @@ async def president(ctx: discord.ApplicationContext):
     # initialize lobby components
     lobby_embed = discord.Embed(title="A game of President!", description="awaiting players...")
     lobby_embed.add_field(name="President", value=str(ctx.author))
-    view = Base.MainGameMenu(game_id, ['Scum", "High-Scum", "Citizen", "Vice-President'], lobby_embed)
+    view = Base.MainGameMenu(game_id, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobby_embed)
 
     # send lobby
     lobby_message = await ctx.respond(view=view, embed=lobby_embed)
@@ -85,16 +86,18 @@ async def president(ctx: discord.ApplicationContext):
     await instructions.delete()
 
     deck.createPile("table")
+    deck.createPile("discard")
 
-    turn_count = game['turnCount']
-    while turn_count > -1:
+    while len(players) > 1:
+        turn_count = game['turnCount']
         n = len(players)
         next_player = players[turn_count % n]
         round_view = Base.RoundView()
 
         m = await ctx.send(
+            f"Round {turn_count}!\n" +
             f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
-            " Will auto pass in 10 seconds",
+            "Will auto pass in 10 seconds",
             view=round_view
         )
 
@@ -109,11 +112,13 @@ async def president(ctx: discord.ApplicationContext):
             await round_view.wait()
 
         game['turnCount'] += 1
-        turn_count = game['turnCount']
-        game['lastTurn'] = game['thisTurn']
-        game['thisTurn'] = 0
+        if game['thisTurn'] != (0, 0):
+            game['lastTurn'] = game['thisTurn']
+            game['thisTurn'] = (0, 0)
 
         await m.delete()
+
+    await ctx.send(f"<@{players[0]}> you win!")
 
 
 class President(commands.Cog):
