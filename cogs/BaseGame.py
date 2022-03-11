@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import slash_command
-from main import players, games
+from main import users, games
 import logging
 
 
@@ -14,11 +14,11 @@ class BaseGame(commands.Cog):
     async def hand(self, ctx):
         # check if player is in a game
         user_id = int(ctx.author.id)
-        if players[user_id] is None:
+        if users[user_id] is None:
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
 
-        game_id = players[user_id]
+        game_id = users[user_id]
         hand = games[game_id]["deck"].piles[user_id]
 
         await ctx.respond("Your hand is: ```" + str(hand) + "```", ephemeral=True)
@@ -26,18 +26,19 @@ class BaseGame(commands.Cog):
     @slash_command(description="quit the game you are currently in")
     async def quit(self, ctx):
         user_id = int(ctx.author.id)
-        if players[user_id] == "":
+        if users[user_id] == "":
             await ctx.respond("nothing to quit from", ephemeral=True)
             return
 
-        game_id = players[user_id]
-        players[user_id] = ""
+        game_id = users[user_id]
+        users[user_id] = ""
+        players = games[game_id]["players"]
 
-        games[game_id]["players"].remove(user_id)
-        await ctx.respond(f"you have been removed from game #{game_id} of type {games[game_id]['gameType']}",
+        players.remove(user_id)
+        await ctx.respond(f"you have been removed from a game of {games[game_id]['gameType']}",
                           ephemeral=True)
 
-        logging.info(f"removed {user_id} from game {game_id}, users left are {games[game_id]['players']}")
+        logging.info(f"removed {user_id} from game {game_id}, users left are {players}")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -60,11 +61,11 @@ class MainGameMenu(discord.ui.View):
 
         # check that user is not already in a game
         user_id = int(interaction.user.id)
-        if players[user_id] != "":
+        if users[user_id] != "":
             await interaction.response.send_message("error: you're already in a game!", ephemeral=True)
             return
 
-        players[user_id] = self.gameID
+        users[user_id] = self.gameID
         self.embed.add_field(name=self.roles.pop(), value=str(interaction.user))
 
         games[self.gameID]["players"].append(user_id)
@@ -85,14 +86,14 @@ class StartGameButton(discord.ui.View):
     async def start(self, _, interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
-        game_id = players[user_id]
+        game_id = users[user_id]
         if game_id == "":
             await interaction.response.send_message("error: you're not in a game", ephemeral=True)
             return
 
         # check that user is in the game host
-        game = games[game_id]
-        if game["players"][0] != user_id:
+        players = games[game_id]["players"]
+        if players[0] != user_id:
             await interaction.response.send_message("error: you're not the game host", ephemeral=True)
             return
 
@@ -109,14 +110,14 @@ class NextButton(discord.ui.View):
     async def start(self, _, interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
-        game_id = players[user_id]
+        game_id = users[user_id]
         if game_id == "":
             await interaction.response.send_message("error: you're not in a game", ephemeral=True)
             return
 
         # check that user is in the game host
-        game = games[game_id]
-        if game["players"][0] != user_id:
+        players = games[game_id]["players"]
+        if players[0] != user_id:
             await interaction.response.send_message("error: you're not the game host", ephemeral=True)
             return
         self.started = True
@@ -135,9 +136,10 @@ class CardButton(discord.ui.Button):
 
     async def callback(self, interaction):
         user_id = int(interaction.user.id)
-        game_id = players[user_id]
-        games[game_id]["deck"].piles[user_id].pick(self.card)  # remove card
+        game_id = users[user_id]
         deck = games[game_id]["deck"]
+        card_removed = deck.piles[user_id].pick(self.card)  # remove card
+        deck.piles["table"].add([card_removed])
 
         view = discord.ui.View()
         cards = deck.piles[user_id].toList()
@@ -173,15 +175,18 @@ class RoundView(discord.ui.View):
     async def btn(self, _, interaction: discord.Interaction):
         # check that user is in a game
         user_id = int(interaction.user.id)
-        game_id = players[user_id]
+        game_id = users[user_id]
         if game_id == "":
             await interaction.response.send_message("error: you're not in a game", ephemeral=True)
             return
 
+        game = games[game_id]
+        turn_count = game["turnCount"]
+        players = game['players']
+        n = len(players)
+
         # check that user is in the game host
-        turn_count = games[game_id]["turnCount"]
-        n = len(games[game_id]["players"])
-        if games[game_id]["players"][turn_count % n] != user_id:
+        if players[turn_count % n] != user_id:
             await interaction.response.send_message("it's not your turn yet!", ephemeral=True)
             return
 
@@ -190,7 +195,7 @@ class RoundView(discord.ui.View):
 
         view = discord.ui.View()
 
-        deck = games[game_id]['deck']
+        deck = game['deck']
         cards = deck.piles[user_id].toList()
 
         for card in cards[:24]:
@@ -205,7 +210,6 @@ class RoundView(discord.ui.View):
         )
 
         await view.wait()
-        games[game_id]["turnCount"] += 1
         self.stop()
 
 

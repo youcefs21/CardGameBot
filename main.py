@@ -13,7 +13,7 @@ coloredlogs.install(level=logging.INFO)
 
 bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
 # a dict of the form {userId: deckId}
-players: Dict[int, str] = defaultdict(lambda: "")
+users: Dict[int, str] = defaultdict(lambda: "")
 
 
 class Game(TypedDict):

@@ -12,8 +12,8 @@ class Deck:
     def __init__(self):
         deck = requests.get(f"{baseURL}/new/shuffle/?deck_count=1").json()
 
-        self.id = deck["deck_id"]
-        self.remaining = deck["remaining"]
+        self.id: str = deck["deck_id"]
+        self.remaining: int = deck["remaining"]
         self.piles: Dict[Union[int, str], Pile] = {}
 
     def draw(self, n: int):
@@ -40,7 +40,9 @@ class Deck:
 
         for i, pileName in enumerate(pile_names):
             self.createPile(pileName)
-            self.piles[pileName] + self.draw(min(n + (i < extra), 24))
+            self.piles[pileName].add(
+                self.draw(min(n + (i < extra), 24))
+            )
 
         return self.piles
 
@@ -74,7 +76,7 @@ class Pile:
         self.parent = deck_id
         self.remaining = 0
 
-    def __add__(self, pile_cards: List[Card]):
+    def add(self, pile_cards: List[Card]):
         """
         adds a list of cards to self Pile
 

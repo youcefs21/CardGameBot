@@ -8,13 +8,13 @@ from discord.ext import commands
 
 import cogs.BaseGame as Base
 from cardsAPI import Deck
-from main import players, games
+from main import users, games
 
 
 async def president(ctx: discord.ApplicationContext):
     # check that the person using the command is not already in a game
     user_id = int(ctx.user.id)
-    if players[user_id] != "":
+    if users[user_id] != "":
         await ctx.respond("error: you're already in a game!", ephemeral=True)
         return
 
@@ -25,14 +25,15 @@ async def president(ctx: discord.ApplicationContext):
     # initialize game
     games[game_id] = {
         "gameType": "President",
-        "deck": None,
+        "deck": deck,
         "turnCount": 0,
         "players": [user_id]
     }
+    game = games[game_id]
 
-    # initialize player
-    games[game_id]["deck"] = deck
-    players[user_id] = game_id
+    # initialize user and players
+    users[user_id] = game_id
+    players = game["players"]
 
     # initialize lobby components
     lobby_embed = discord.Embed(title="A game of President!", description="awaiting players...")
@@ -49,9 +50,8 @@ async def president(ctx: discord.ApplicationContext):
     await start_view.wait()
     if not start_view.started:
         logging.info("game cancelled")
-        for playerID in games[game_id]["players"]:
-            players[playerID] = ""
-        del games[game_id]
+        for playerID in players:
+            users[playerID] = ""
         await ctx.send("game cancelled")
         return
 
@@ -60,7 +60,7 @@ async def president(ctx: discord.ApplicationContext):
     await start_message.delete()
 
     # divide the deck evenly between the players
-    deck.div(games[game_id]["players"])
+    deck.div(players)
 
     next_view = Base.NextButton()
     instructions = await ctx.send("The cards have been drawn!\nUse `/hand` to see your hand\n" +
@@ -75,20 +75,19 @@ async def president(ctx: discord.ApplicationContext):
     await next_view.wait()
     if not next_view.started:
         logging.info("game cancelled")
-        for playerID in games[game_id]["players"]:
-            players[playerID] = ""
-        del games[game_id]
+        for playerID in players:
+            users[playerID] = ""
         await ctx.send("game cancelled")
         return
 
     await instructions.delete()
 
-    games[game_id]["deck"].createPile("table")
+    deck.createPile("table")
 
-    turn_count = games[game_id]["turnCount"]
+    turn_count = game["turnCount"]
     while turn_count > -1:
-        n = len(games[game_id]["players"])
-        next_player = games[game_id]["players"][turn_count % n]
+        n = len(players)
+        next_player = players[turn_count % n]
         round_view = Base.RoundView()
 
         m = await ctx.send(
@@ -106,11 +105,9 @@ async def president(ctx: discord.ApplicationContext):
 
         if round_view.started:
             await round_view.wait()
-        # else pass the turn
-        else:
-            games[game_id]["turnCount"] += 1
 
-        turn_count = games[game_id]["turnCount"]
+        game["turnCount"] += 1
+        turn_count = game["turnCount"]
 
         await m.delete()
 
@@ -124,25 +121,26 @@ class President(commands.Cog):
     async def give(self, ctx, card_code):
         # check if player is in a game
         user_id = int(ctx.author.id)
-        if players[user_id] == "":
+        if users[user_id] == "":
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
-        game_id = players[user_id]
+        game_id = users[user_id]
         piles = games[game_id]["deck"].piles
+        players = games[game_id]["players"]
 
         # check if the person using is the lowest player
-        if int(games[game_id]["players"][-1]) == user_id:
-            pres_id = int(games[game_id]["players"][0])
+        if int(players[-1]) == user_id:
+            pres_id = int(players[0])
 
-        elif int(games[game_id]["players"][0]) == user_id:
-            pres_id = int(games[game_id]["players"][-1])
+        elif int(players[0]) == user_id:
+            pres_id = int(players[-1])
 
         else:
             await ctx.respond("you are not the president, nor the lowest ranking player", ephemeral=True)
             return
 
         # take away card_code from user_id
-        if not (piles[pres_id] + [piles[user_id].pick(card_code)]):
+        if not piles[pres_id].add([piles[user_id].pick(card_code)]):
             await ctx.respond("card not found", ephemeral=True)
             return
 
