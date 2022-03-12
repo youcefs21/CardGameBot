@@ -177,7 +177,8 @@ class CardButton(discord.ui.Button):
             return
 
         for card in cards[:24]:
-            view.add_item(CardButton(card, self.origin, self.table_message))
+            button = CardButton(card, self.origin, self.table_message)
+            view.add_item(button)
 
         view.add_item(PassButton(self.origin))
 

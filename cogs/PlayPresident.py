@@ -103,6 +103,7 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
     await table_message.edit(file=cards_on_table, embed=None)
 
     # Main game loop
+    m = await ctx.send(".")
     while len(players) > 1:
         turn_count = game['turnCount']
         n = len(players)
@@ -121,12 +122,11 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
 
         round_view = Base.RoundView(table_message)
 
-        m = await ctx.send(
-            f"**Round {turn_count}!**\n\n" +
-            f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
-            "Will auto pass in 30 seconds",
-            view=round_view
-        )
+        await m.edit(content=f"**Round {turn_count}!**\n\n" +
+                             f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
+                             "Will auto pass in 30 seconds",
+                     view=round_view
+                     )
 
         # wait 10 seconds, then check if the show hand button was pressed
         # if it was pressed, await round_view to stop
@@ -147,11 +147,12 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
 
         if deck.piles[next_player].remaining == 0:
             players.remove(next_player)
-            await ctx.send(f"<@{next_player}> is the new {ranks[len(winners)]}!", delete_after=10)
+            await ctx.send(f"<@{next_player}> is the new {ranks[-1-len(winners)]}!", delete_after=10)
             winners.append(next_player)
             users[next_player] = ""
 
-        await m.delete()
+    await m.delete()
+    await table_message.delete()
 
     await ctx.send(f"<@{players[0]}> is the new Scum!", delete_after=10)
     users[players[0]] = ""
@@ -162,7 +163,7 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
     )
     for i, winner_id in enumerate(winners):
         winner = await bot.fetch_user(int(winner_id))
-        game_summary_embed.add_field(name=ranks[-(i+1)], value=str(winner))
+        game_summary_embed.add_field(name=ranks[-(i + 1)], value=str(winner))
 
     loser = await bot.fetch_user(int(players[0]))
     game_summary_embed.add_field(name="Scum", value=str(loser))
