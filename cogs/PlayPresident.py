@@ -11,7 +11,7 @@ from cardsAPI import Deck
 from main import users, games
 
 
-async def president(ctx: discord.ApplicationContext):
+async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
     # check that the person using the command is not already in a game
     user_id = int(ctx.user.id)
     if users[user_id] != "":
@@ -30,18 +30,21 @@ async def president(ctx: discord.ApplicationContext):
         "players": [user_id],
         "lastTurn": (0, 0),
         "thisTurn": (0, 0),
-        "passCounter": 0
+        "passCounter": 0,
+        "winners": []
     }
     game = games[game_id]
 
     # initialize user and players
     users[user_id] = game_id
     players = game['players']
+    winners = game['winners']
 
     # initialize lobby components
     lobby_embed = discord.Embed(title="A game of President!", description="awaiting players...")
     lobby_embed.add_field(name="President", value=str(ctx.author))
-    view = Base.MainGameMenu(game_id, ["Scum", "High-Scum", "Citizen", "Vice-President"], lobby_embed)
+    ranks = ["Scum", "High-Scum", "Citizen", "Vice-President", "President"]
+    view = Base.MainGameMenu(game_id, ranks[:-1], lobby_embed)
 
     # send lobby
     lobby_message = await ctx.respond(view=view, embed=lobby_embed)
@@ -136,10 +139,30 @@ async def president(ctx: discord.ApplicationContext):
             game['lastTurn'] = game['thisTurn']
             game['thisTurn'] = (0, 0)
 
+        if deck.piles[next_player].remaining == 0:
+            players.remove(next_player)
+            await ctx.send(f"<@{next_player}> is the new {ranks[len(winners)]}!", delete_after=10)
+            winners.append(next_player)
+            users[next_player] = ""
+
         await table_message.delete()
         await m.delete()
 
-    await ctx.send(f"<@{players[0]}> you win!")
+    await ctx.send(f"<@{players[0]}> is the new Scum!", delete_after=10)
+    users[players[0]] = ""
+
+    game_summary_embed = discord.Embed(
+        title="President Game Summary",
+        description=f"the game lasted {game['turnCount']} rounds! The new rankings are:"
+    )
+    for i, winner_id in enumerate(winners):
+        winner = await bot.fetch_user(int(winner_id))
+        game_summary_embed.add_field(name=ranks[-(i+1)], value=str(winner))
+
+    loser = await bot.fetch_user(int(players[0]))
+    game_summary_embed.add_field(name="Scum", value=str(loser))
+
+    await ctx.send(embed=game_summary_embed)
 
 
 class President(commands.Cog):

@@ -12,7 +12,7 @@ class ChooseGame(commands.Cog):
 
     @play.command(description="a game of president")
     async def president(self, ctx):
-        await PlayPresident.president(ctx)
+        await PlayPresident.president(ctx, self.bot)
 
 
 def setup(bot):

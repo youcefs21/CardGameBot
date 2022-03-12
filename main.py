@@ -24,6 +24,7 @@ class Game(TypedDict):
     lastTurn: Tuple[int, int]  # value, count
     thisTurn: Tuple[int, int]  # value, count
     passCounter: int
+    winners: List[int]
 
 
 games: Dict[str, Game] = {}
