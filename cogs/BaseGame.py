@@ -273,11 +273,12 @@ class RoundView(discord.ui.View):
             view=view,
             ephemeral=True
         )
+        await view.wait()
+
         _, current_count = game['thisTurn']
         if current_count != 0:
             game['passCounter'] = 0
 
-        await view.wait()
         self.stop()
 
 

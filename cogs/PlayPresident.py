@@ -122,7 +122,6 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
             # the player who last played plays again:
             players.insert(0, players.pop())
 
-
         next_player = players[turn_count % n]
         round_view = Base.RoundView(table_message)
 
