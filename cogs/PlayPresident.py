@@ -107,7 +107,6 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
     while len(players) > 1:
         turn_count = game['turnCount']
         n = len(players)
-        next_player = players[turn_count % n]
 
         if game['passCounter'] >= n and game['lastTurn'] != (0, 0):
             game['passCounter'] = 0
@@ -120,6 +119,11 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
             picture = discord.File(deck.table_img.img_path)
             await table_message.edit(file=picture)
 
+            # the player who last played plays again:
+            players.insert(0, players.pop())
+
+
+        next_player = players[turn_count % n]
         round_view = Base.RoundView(table_message)
 
         await m.edit(content=f"**Round {turn_count}!**\n\n" +
