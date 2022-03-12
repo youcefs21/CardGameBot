@@ -1,8 +1,12 @@
+import logging
+import os
+import random
+from io import BytesIO
 from typing import Dict, List, Union
 
 import coloredlogs
-import logging
 import requests
+from PIL import Image
 
 baseURL = "http://127.0.0.1:8000/api/deck"
 
@@ -15,6 +19,7 @@ class Deck:
         self.id: str = deck['deck_id']
         self.remaining: int = deck['remaining']
         self.piles: Dict[Union[int, str], Pile] = {}
+        self.table_img = TableIMG(self.id)
 
     def draw(self, n: int):
         """
@@ -183,6 +188,7 @@ class Pile:
         else:
             self.distribution[card_id_to_int(card)] -= 1
 
+        self.remaining -= 1
         return Card(response['cards'][0])
 
     def draw(self, n: int):
@@ -201,7 +207,29 @@ class Pile:
         for card in card_list:
             self.distribution[int(card)] -= 1
 
+        self.remaining -= n
         return card_list
+
+
+class TableIMG:
+    def __init__(self, deck_id):
+        dir_name = os.path.dirname(__file__)
+        self.empty_img_path = os.path.join(dir_name, './assets/empty.png')
+        img_template = Image.open(self.empty_img_path)
+        self.img_path = os.path.join(dir_name, f'./assets/{deck_id}.png')
+        img_template.save(self.img_path)
+
+    def addCard(self, card):
+        prv = Image.open(self.img_path)
+        card_img = Image.open(BytesIO(requests.get(card.img).content))
+        angle = random.randrange(360)
+        card_img = card_img.rotate(angle, expand=True)
+        prv.paste(card_img, (150, 10), card_img)
+        prv.save(self.img_path)
+
+    def clearTable(self):
+        img_template = Image.open(self.empty_img_path)
+        img_template.save(self.img_path)
 
 
 # testing

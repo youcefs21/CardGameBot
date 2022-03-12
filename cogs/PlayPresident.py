@@ -91,6 +91,17 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
     deck.createPile("table")
     deck.createPile("discard")
 
+    cards_on_table = discord.File(deck.table_img.img_path, "table.png")
+    pic_embed = discord.Embed()
+    pic_embed.set_image(url="attachment://table.png")
+    table_message = await ctx.send(
+        "here are the cards that are currently on the table\n",
+        file=cards_on_table,
+        embed=pic_embed
+    )
+    cards_on_table = discord.File(deck.table_img.img_path)
+    await table_message.edit(file=cards_on_table, embed=None)
+
     # Main game loop
     while len(players) > 1:
         turn_count = game['turnCount']
@@ -103,28 +114,23 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
             deck.piles['discard'].add(table_cards)
             game['lastTurn'] = (0, 0)
             game['thisTurn'] = (0, 0)
-            table_message = await ctx.send(
-                "All players have passed, table cleared"
-            )
-        else:
-            cards_on_table = deck.piles['table'].toList()
-            table_message = await ctx.send(
-                "here are the cards that are currently on the table\n" +
-                str(cards_on_table)
-            )
+            deck.table_img.clearTable()
+
+            picture = discord.File(deck.table_img.img_path)
+            await table_message.edit(file=picture)
 
         round_view = Base.RoundView(table_message)
 
         m = await ctx.send(
             f"**Round {turn_count}!**\n\n" +
             f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
-            "Will auto pass in 10 seconds",
+            "Will auto pass in 30 seconds",
             view=round_view
         )
 
         # wait 10 seconds, then check if the show hand button was pressed
         # if it was pressed, await round_view to stop
-        for i in range(10):
+        for i in range(30):
             await asyncio.sleep(1)
             if round_view.started:
                 break
@@ -145,7 +151,6 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
             winners.append(next_player)
             users[next_player] = ""
 
-        await table_message.delete()
         await m.delete()
 
     await ctx.send(f"<@{players[0]}> is the new Scum!", delete_after=10)

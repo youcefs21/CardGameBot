@@ -143,14 +143,12 @@ class CardButton(discord.ui.Button):
         game = games[game_id]
         game['thisTurn'] = (int(self.card), game['thisTurn'][1] + 1)
         deck = game['deck']
-        card_removed = deck.piles[user_id].pick(self.card)  # remove card
-        deck.piles['table'].add([card_removed])
-        cards_on_table = deck.piles['table'].toList()
+        deck.piles[user_id].pick(self.card)  # remove card
+        deck.table_img.addCard(self.card)
+        deck.piles['table'].add([self.card])
 
-        await self.table_message.edit(
-            content="here are the cards that are currently on the table\n" +
-            str(cards_on_table)
-        )
+        cards_on_table = discord.File(deck.table_img.img_path)
+        await self.table_message.edit(file=cards_on_table, embed=None)
 
         _, min_count = game['lastTurn']
         _, current_count = game['thisTurn']
