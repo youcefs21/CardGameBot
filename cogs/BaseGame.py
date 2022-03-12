@@ -271,7 +271,6 @@ class RoundView(discord.ui.View):
         view.add_item(PassButton(view))
 
         await interaction.response.send_message(
-            "pick a card or pass, no action for 5 seconds is an auto-pass",
             view=view,
             ephemeral=True
         )

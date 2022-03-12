@@ -4,7 +4,7 @@ import coloredlogs
 import logging
 import requests
 
-baseURL = "https://deckofcardsapi.com/api/deck"
+baseURL = "http://127.0.0.1:8000/api/deck"
 
 
 class Deck:
