@@ -11,7 +11,10 @@ from cardsAPI import Deck
 
 coloredlogs.install(level=logging.INFO)
 
-bot = discord.Bot(debug_guilds=[config('DEBUG_GUILD', cast=int)])
+bot = discord.Bot(debug_guilds=config(
+    'DEBUG_GUILDS',
+    cast=lambda v: [int(s.strip()) for s in v.split(',')]
+))
 # a dict of the form {userId: deckId}
 users: Dict[int, str] = defaultdict(lambda: "")
 

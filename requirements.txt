@@ -4,3 +4,4 @@ pandas
 python-decouple
 coloredlogs
 Pillow
+pytest
