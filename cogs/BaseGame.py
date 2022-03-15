@@ -16,7 +16,7 @@ class BaseGame(commands.Cog):
     async def hand(self, ctx):
         # check if player is in a game
         user_id = int(ctx.author.id)
-        if users[user_id] is None:
+        if users[user_id] == "":
             await ctx.respond("error: you're not in a game!", ephemeral=True)
             return
 
@@ -131,8 +131,10 @@ class CardButton(discord.ui.Button):
         self.card = card
         self.origin = origin
         self.table_message = table_message
+        card_label = str(card).replace("S", " ♠").replace("H", " ♥").replace("D", " ♦")
+        card_label = card_label.replace("C", " ♣").replace("0", "10")
         super().__init__(
-            label=str(card),
+            label=card_label,
             style=discord.enums.ButtonStyle.primary,
             custom_id=str(card)
         )
