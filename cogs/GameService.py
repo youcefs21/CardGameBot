@@ -1,9 +1,9 @@
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-import cogs.PlayPresident as PlayPresident
+import games.PlayPresident as PlayPresident
 
 
-class ChooseGame(commands.Cog):
+class GameService(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -16,4 +16,4 @@ class ChooseGame(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ChooseGame(bot))
+    bot.add_cog(GameService(bot))
