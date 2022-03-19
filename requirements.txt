@@ -1,5 +1,5 @@
 requests
-py-cord==2.0.0b1
+py-cord==2.0.0b5
 pandas
 python-decouple
 coloredlogs
