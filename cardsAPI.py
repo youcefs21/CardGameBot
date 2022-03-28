@@ -7,6 +7,9 @@ from typing import Dict, List, Union
 import coloredlogs
 import requests
 from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+from PIL import ImageOps
 
 baseURL = "http://127.0.0.1:8000/api/deck"
 
@@ -219,12 +222,32 @@ class TableIMG:
         self.img_path = os.path.join(dir_name, f'./assets/{deck_id}.png')
         img_template.save(self.img_path)
 
-    def addCard(self, card):
+    def addCard(self, card: Card, pfp_url, player_name, cards_left):
         prv = Image.open(self.img_path)
         card_img = Image.open(BytesIO(requests.get(card.img).content))
         angle = random.randrange(360)
         card_img = card_img.rotate(angle, expand=True)
         prv.paste(card_img, (150, 10), card_img)
+        prv.save(self.img_path)  # save img of cards + table
+        # add the GUI
+
+        draw = ImageDraw.Draw(prv)
+        #TODO change font directory
+        card_count_font = ImageFont.truetype("/usr/share/fonts/TTF/Hack-Regular.ttf", 14)
+        user_name_font = ImageFont.truetype("/usr/share/fonts/TTF/Hack-Regular.ttf", 20)
+        draw.rounded_rectangle((20, 10, 270, 70), fill="black", radius=30)
+        draw.text((75, 15), player_name, (0, 150, 255), font=user_name_font)
+        draw.text((75, 45), f"{cards_left} cards left", (255, 255, 255), font=card_count_font)
+
+        pfp_size = (60, 60)
+        pfp_img = Image.open(BytesIO(requests.get(pfp_url).content)).resize(pfp_size)
+        mask = Image.new('L', pfp_size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + pfp_size, fill=255)
+        pfp_img = ImageOps.fit(pfp_img, mask.size, centering=(0.5, 0.5))
+        pfp_img.putalpha(mask)
+
+        prv.paste(pfp_img, (10, 10), pfp_img)
         prv.save(self.img_path)
 
     def clearTable(self):
