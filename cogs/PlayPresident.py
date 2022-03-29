@@ -125,6 +125,13 @@ async def president(ctx: discord.ApplicationContext, bot: discord.Bot):
         next_player = players[turn_count % n]
         round_view = Base.RoundView(table_message)
 
+        player = await bot.fetch_user(next_player)
+        pfp_url = player.avatar
+        player_name = player.display_name
+        pic_bytes = deck.table_img.addUI(pfp_url, player_name, deck.piles[players[0]].remaining)
+        picture = discord.File(pic_bytes, filename="table.png")
+        await table_message.edit(file=picture)
+
         await m.edit(content=f"**Round {turn_count}!**\n\n" +
                              f"<@{next_player}> it's your turn, click 'Show Hand' to proceed!\n" +
                              "Will auto pass in 30 seconds",

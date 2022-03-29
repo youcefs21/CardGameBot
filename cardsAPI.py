@@ -222,16 +222,17 @@ class TableIMG:
         self.img_path = os.path.join(dir_name, f'./assets/{deck_id}.png')
         img_template.save(self.img_path)
 
-    def addCard(self, card: Card, pfp_url, player_name, cards_left):
+    def addCard(self, card: Card):
         prv = Image.open(self.img_path)
         card_img = Image.open(BytesIO(requests.get(card.img).content))
         angle = random.randrange(360)
         card_img = card_img.rotate(angle, expand=True)
         prv.paste(card_img, (150, 10), card_img)
         prv.save(self.img_path)  # save img of cards + table
-        # add the GUI
 
-        draw = ImageDraw.Draw(prv)
+    def addUI(self, pfp_url, player_name, cards_left):
+        img = Image.open(self.img_path)
+        draw = ImageDraw.Draw(img)
         #TODO change font directory
         card_count_font = ImageFont.truetype("/usr/share/fonts/TTF/Hack-Regular.ttf", 14)
         user_name_font = ImageFont.truetype("/usr/share/fonts/TTF/Hack-Regular.ttf", 20)
@@ -247,8 +248,11 @@ class TableIMG:
         pfp_img = ImageOps.fit(pfp_img, mask.size, centering=(0.5, 0.5))
         pfp_img.putalpha(mask)
 
-        prv.paste(pfp_img, (10, 10), pfp_img)
-        prv.save(self.img_path)
+        img.paste(pfp_img, (10, 10), pfp_img)
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        return BytesIO(img_byte_arr)
 
     def clearTable(self):
         img_template = Image.open(self.empty_img_path)

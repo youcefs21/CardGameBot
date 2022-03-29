@@ -148,10 +148,11 @@ class CardButton(discord.ui.Button):
         deck.piles[user_id].pick(self.card)  # remove card
         pfp_url = interaction.user.avatar.url
         player_name = interaction.user.display_name
-        deck.table_img.addCard(self.card, pfp_url, player_name, deck.piles[user_id].remaining)
+        deck.table_img.addCard(self.card)
+        pic_bytes = deck.table_img.addUI(pfp_url, player_name, deck.piles[user_id].remaining)
         deck.piles['table'].add([self.card])
 
-        cards_on_table = discord.File(deck.table_img.img_path)
+        cards_on_table = discord.File(pic_bytes, filename="table.png")
         await self.table_message.edit(file=cards_on_table, embed=None)
 
         _, min_count = game['lastTurn']
