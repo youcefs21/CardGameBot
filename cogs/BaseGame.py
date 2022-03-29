@@ -146,7 +146,9 @@ class CardButton(discord.ui.Button):
         game['thisTurn'] = (int(self.card), game['thisTurn'][1] + 1)
         deck = game['deck']
         deck.piles[user_id].pick(self.card)  # remove card
-        deck.table_img.addCard(self.card)
+        pfp_url = interaction.user.avatar.url
+        player_name = interaction.user.display_name
+        deck.table_img.addCard(self.card, pfp_url, player_name, deck.piles[user_id].remaining)
         deck.piles['table'].add([self.card])
 
         cards_on_table = discord.File(deck.table_img.img_path)
