@@ -68,7 +68,7 @@ class LobbyButtons(discord.ui.View):
         self.update = True
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)
-    async def next_game_button(self, _, interaction: discord.Interaction):
+    async def next_button(self, _, interaction: discord.Interaction):
         player_id = interaction.user.id
         if player_id != self.player_ids[0]:
             await interaction.response.send_message("you're not the game host", ephemeral=True)
@@ -105,6 +105,7 @@ class Lobby:
             if lobby_view.update:
                 embed = await self.createEmbed(lobby_view.player_ids)
                 await lobby_msg.edit_original_message(embed=embed)
+                lobby_view.update = False
 
         # delete lobby and return list of participating players
         lobby_view.stop()
@@ -118,11 +119,16 @@ class Lobby:
         """
 
         host = await self.game_service.bot.fetch_user(player_ids[0])
-        embed = discord.Embed(title=f"A game of {self.game_name}", description=f"{host}")
-        embed.add_field(name="Player 1", value=host)
+        title = f"A game of {self.game_name}"
+        description = f"{host} started a game of {self.game_name} \n\n" + \
+                      f"use `/rules {self.game_name}` to learn how to play cardbot's version of {self.game_name}!"
 
-        for i in range(1, len(player_ids)):
-            player = await self.game_service.bot.fetch_user(player_ids[i])
+        embed = discord.Embed(title=title, description=description)
+
+        embed.add_field(name="Number of Players", value=f"{len(player_ids)}/6", inline=False)
+
+        for i, player_id in enumerate(player_ids):
+            player = await self.game_service.bot.fetch_user(player_id)
             embed.add_field(name=f"Player {i+1}", value=player)
 
         return embed
