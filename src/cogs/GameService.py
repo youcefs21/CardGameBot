@@ -3,7 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-import games.PlayPresident as PlayPresident
+import src.games.PlayPresident as PlayPresident
 from typing import Set, List
 
 

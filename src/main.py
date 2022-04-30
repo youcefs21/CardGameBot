@@ -16,8 +16,8 @@ bot = discord.Bot(debug_guilds=config(
 
 # loading all the extensions
 dir_name = os.path.dirname(__file__)
-for filename in os.listdir(os.path.join(dir_name, './cogs')):
+for filename in os.listdir(os.path.join(dir_name, 'cogs')):
     if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
+        bot.load_extension(f'src.cogs.{filename[:-3]}')
 
 bot.run(config('TOKEN'))
