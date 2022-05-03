@@ -5,6 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from decouple import config
 
+from src.main import main
+
 
 @pytest.fixture(scope="module")
 def browsers():
@@ -23,6 +25,11 @@ def browsers():
     time.sleep(20)
     for driver in drivers:
         driver.quit()
+
+
+@pytest.fixture(scope="module")
+def bot():
+    return main()
 
 
 def test_login(browsers):
