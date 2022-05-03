@@ -1,7 +1,8 @@
 requests
-py-cord==2.0.0b5
+py-cord==2.0.0b7
 pandas
 python-decouple
 coloredlogs
 Pillow
 pytest
+selenium
