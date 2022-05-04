@@ -11,10 +11,11 @@ from src.main import main
 @pytest.fixture(scope="module")
 def browsers():
     driver = webdriver.Firefox()
-    driver.get("https://discord.com/channels/904807840236060732/970085634351964221")
+    test_channel = config("TEST_CHANNEL")
+    driver.get(test_channel)
     print("\nstarting browsers...")
     for i in range(5):
-        driver.execute_script("window.open('https://discord.com/channels/904807840236060732/970085634351964221')")
+        driver.execute_script(f"window.open('{test_channel}')")
         print(f"tab {i+2} is open")
         time.sleep(1)
 
