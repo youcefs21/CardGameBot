@@ -25,6 +25,25 @@ def browser():
 
     time.sleep(2)
 
+    # login into all tabs
+    for i, window in enumerate(driver.window_handles):
+        driver.switch_to.window(window)
+        email_box = driver.find_element(by=By.NAME, value="email")
+        email_box.send_keys(config(f"TEST_EMAIL_{i+1}"))
+
+        pass_box = driver.find_element(by=By.NAME, value="password")
+        pass_box.send_keys(config(f"TEST_PASS_{i+1}"))
+
+        driver.find_element(by=By.CLASS_NAME, value="contents-3ca1mk").submit()
+        time.sleep(1)
+
+    # check that all the tabs are logged in
+    time.sleep(1)
+    for i, window in enumerate(driver.window_handles):
+        driver.switch_to.window(window)
+        time.sleep(0.5)
+        assert driver.find_element(by=By.CLASS_NAME, value="title-338goq").text == f"Tester{i + 1}"
+
     yield driver
 
     time.sleep(1)
@@ -47,51 +66,52 @@ def bot():
     bt.close()
 
 
-def test_login(browser):
-    for i, window in enumerate(browser.window_handles):
-        browser.switch_to.window(window)
-        email_box = browser.find_element(by=By.NAME, value="email")
-        email_box.send_keys(config(f"TEST_EMAIL_{i+1}"))
-
-        pass_box = browser.find_element(by=By.NAME, value="password")
-        pass_box.send_keys(config(f"TEST_PASS_{i+1}"))
-
-        browser.find_element(by=By.CLASS_NAME, value="contents-3ca1mk").submit()
-        time.sleep(1)
-
-    time.sleep(1)
-    for i, window in enumerate(browser.window_handles):
-        browser.switch_to.window(window)
-        time.sleep(0.5)
-        assert browser.find_element(by=By.CLASS_NAME, value="title-338goq").text == f"Tester{i + 1}"
-
-
 class TestLobby:
 
-    def test_no_double_host(self, browser, bot):
+    @pytest.fixture(scope="function")
+    def start_lobby(self, browser, bot):
         """
-        test that the host can't join their own game
+        start a game of president
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param bot: initialize the bot
-        :return: assert that "You're already in a game!" was sent
+        :return: bot
         """
 
         browser.switch_to.window(browser.window_handles[0])
 
-        text_box = browser.find_element(by=By.CLASS_NAME, value="markup-eYLPri")
+        ActionChains(browser).send_keys("/play president" + Keys.ENTER + Keys.ENTER).perform()
+        time.sleep(2)
 
-        for i in range(2):
-            ActionChains(browser).send_keys("/play president" + Keys.ENTER + Keys.ENTER).perform()
-            time.sleep(2)
+        yield bot
+
+        for i, window in enumerate(browser.window_handles):
+            if i == 0:
+                continue
+            browser.switch_to.window(window)
+            time.sleep(0.5)
+            browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
+
+        time.sleep(10)  # wait for leave event to trigger
+
+    def test_no_double_host(self, browser, start_lobby):
+        """
+        test that the host can't join their own game
+        :param browser: Firefox webdriver with at least 1 logged in discord account
+        :param start_lobby: initialize the bot and start a game of president
+        :return: assert that "You're already in a game!" was sent
+        """
+
+        ActionChains(browser).send_keys("/play president" + Keys.ENTER + Keys.ENTER).perform()
+        time.sleep(2)
 
         msg = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
         assert msg[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI").text == "You're already in a game!"
 
-    def test_min_player_count(self, browser, bot):
+    def test_min_player_count(self, browser, start_lobby):
         """
         test that the host can't start a game with less than 2 players
         :param browser: Firefox webdriver with at least 1 logged in discord account
-        :param bot: initialize the bot
+        :param start_lobby: initialize the bot and start a game of president
         :return: assert that "There isn't enough players!" was sent
         """
 
@@ -101,7 +121,7 @@ class TestLobby:
         msg = msgs[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI")
         assert msg.text == "There isn't enough players!"
 
-    def test_max_player_count(self, browser, bot):
+    def test_max_player_count(self, browser, start_lobby):
         """
         test that no more than 6 players can join a game
         :param browser: Firefox webdriver with at least 1 logged in discord account
@@ -120,3 +140,7 @@ class TestLobby:
         msgs = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
         msg = msgs[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI")
         assert msg.text == "sorry, this game is full"
+
+        browser.switch_to.window(browser.window_handles[-1])
+        browser.close()
+
