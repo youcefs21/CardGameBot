@@ -26,7 +26,7 @@ class GameService(commands.Cog):
         self.users_in_game.add(user_id)
 
         # lobby
-        lobby = Lobby(self.users_in_game, self.bot, game_name="President", max_count=2, min_count=6)
+        lobby = Lobby(self.users_in_game, self.bot, game_name="President", max_count=6, min_count=2)
         await lobby.openLobby(user_id, ctx)
 
         # role choice and last chance to quit game
