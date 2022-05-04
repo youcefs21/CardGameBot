@@ -84,11 +84,10 @@ class TestLobby:
 
         yield bot
 
+        # cancel the game by making all players leave
         for i, window in enumerate(browser.window_handles):
-            if i == 0:
-                continue
             browser.switch_to.window(window)
-            time.sleep(0.5)
+            time.sleep(0.2)
             browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
 
         time.sleep(10)  # wait for leave event to trigger

@@ -128,9 +128,9 @@ class Lobby:
 
             # check if the player list has been updated, then update embed
             if lobby_view.update:
+                lobby_view.update = False
                 embed = await self.createEmbed(lobby_view.player_ids)
                 await lobby_msg.edit_original_message(embed=embed)
-                lobby_view.update = False
 
         # delete lobby and return list of participating players
         lobby_view.stop()
