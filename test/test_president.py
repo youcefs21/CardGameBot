@@ -87,3 +87,16 @@ class TestLobby:
         msg = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
         assert msg[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI").text == "You're already in a game!"
 
+    def test_min_player_count(self, browser, bot):
+        """
+        test that the host can't start a game with less than 2 players
+        :param browser: Firefox webdriver with at least 1 logged in discord account
+        :param bot: initialize the bot
+        :return: assert that "You need at least 2 players to start a game!" was sent
+        """
+
+        browser.find_elements(by=By.XPATH, value='//descendant::button[.="Next"]')[-1].click()
+        time.sleep(1)
+        msgs = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
+        msg = msgs[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI")
+        assert msg.text == "There isn't enough players!"
