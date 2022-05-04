@@ -31,7 +31,7 @@ I'll have a public bot at some point, but for now you'll need to host the bot yo
 
 0. if you haven't already, complete the [installation](#installation) section
 1. install [geckodriver](https://github.com/mozilla/geckodriver/releases) (needed for selenium)
-2. place the login information of 6 discord accounts you want to use for testing in the `.env` file from earlier.
+2. place the login information of 7 discord accounts you want to use for testing in the `.env` file from earlier.
 3. visit the channel you want to use for testing in the [web version of discord](https://discord.com/login) and place the url in the `TEST_CHANNEL` variable in the `.env` file.
 4. Make sure all the accounts have access to the channel you want to test in.
 5. run `pytest test` in the terminal

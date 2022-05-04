@@ -18,7 +18,7 @@ def browser():
     test_channel = config("TEST_CHANNEL")
     driver.get(test_channel)
     print("\nstarting browsers...")
-    for i in range(0):
+    for i in range(6):
         driver.execute_script(f"window.open('{test_channel}')")
         print(f"tab {i+2} is open")
         time.sleep(1)
@@ -57,7 +57,7 @@ def test_login(browser):
         pass_box.send_keys(config(f"TEST_PASS_{i+1}"))
 
         browser.find_element(by=By.CLASS_NAME, value="contents-3ca1mk").submit()
-        time.sleep(2)
+        time.sleep(1)
 
     time.sleep(1)
     for i, window in enumerate(browser.window_handles):
@@ -75,6 +75,8 @@ class TestLobby:
         :param bot: initialize the bot
         :return: assert that "You're already in a game!" was sent
         """
+
+        browser.switch_to.window(browser.window_handles[0])
 
         text_box = browser.find_element(by=By.CLASS_NAME, value="markup-eYLPri")
 
