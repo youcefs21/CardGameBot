@@ -35,7 +35,7 @@ def browser():
         pass_box.send_keys(config(f"TEST_PASS_{i+1}"))
 
         driver.find_element(by=By.CLASS_NAME, value="contents-3ca1mk").submit()
-        time.sleep(1)
+        time.sleep(1.5)
 
     # check that all the tabs are logged in
     time.sleep(1)
@@ -69,34 +69,49 @@ def bot():
 class TestLobby:
 
     @pytest.fixture(scope="function")
-    def start_lobby(self, browser, bot):
+    def min_lobby(self, browser, bot):
         """
-        start a game of president
+        start a game of president with only 1 player, the host
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param bot: initialize the bot
         :return: bot
         """
 
         browser.switch_to.window(browser.window_handles[0])
-
-        ActionChains(browser).send_keys("/play president" + Keys.ENTER + Keys.ENTER).perform()
+        browser.find_element(by=By.CLASS_NAME, value="attachButton-1ijpt9").click()
+        browser.find_element(by=By.ID, value="channel-attach-SLASH_COMMAND").click()
+        ActionChains(browser).send_keys("play president" + Keys.ENTER + Keys.ENTER).perform()
         time.sleep(2)
 
         yield bot
 
-        # cancel the game by making all players leave
-        for i, window in enumerate(browser.window_handles):
-            browser.switch_to.window(window)
-            time.sleep(0.2)
-            browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
+        browser.switch_to.window(browser.window_handles[0])
+        browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
 
         time.sleep(10)  # wait for leave event to trigger
 
-    def test_no_double_host(self, browser, start_lobby):
+    @pytest.fixture(scope="function")
+    def full_lobby(self, browser, min_lobby):
+
+        for i in range(1, 6):
+            browser.switch_to.window(browser.window_handles[i])
+            time.sleep(0.1)
+            browser.find_elements(by=By.XPATH, value='//descendant::button[.="Join"]')[-1].click()
+            time.sleep(0.4)
+
+        yield min_lobby
+
+        # cancel the game by making all players leave
+        for i in range(1, 6):
+            browser.switch_to.window(browser.window_handles[i])
+            time.sleep(0.2)
+            browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
+
+    def test_no_double_host(self, browser, min_lobby):
         """
         test that the host can't join their own game
         :param browser: Firefox webdriver with at least 1 logged in discord account
-        :param start_lobby: initialize the bot and start a game of president
+        :param min_lobby: initialize the bot and start a game of president
         :return: assert that "You're already in a game!" was sent
         """
 
@@ -106,13 +121,14 @@ class TestLobby:
         msg = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
         assert msg[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI").text == "You're already in a game!"
 
-    def test_min_player_count(self, browser, start_lobby):
+    def test_min_player_count(self, browser, min_lobby):
         """
         test that the host can't start a game with less than 2 players
         :param browser: Firefox webdriver with at least 1 logged in discord account
-        :param start_lobby: initialize the bot and start a game of president
+        :param min_lobby: initialize the bot and start a game of president
         :return: assert that "There isn't enough players!" was sent
         """
+        time.sleep(2)
 
         browser.find_elements(by=By.XPATH, value='//descendant::button[.="Next"]')[-1].click()
         time.sleep(1)
@@ -120,21 +136,18 @@ class TestLobby:
         msg = msgs[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI")
         assert msg.text == "There isn't enough players!"
 
-    def test_max_player_count(self, browser, start_lobby):
+    def test_max_player_count(self, browser, full_lobby):
         """
         test that no more than 6 players can join a game
         :param browser: Firefox webdriver with at least 1 logged in discord account
-        :param bot: initialize the bot
+        :param full_lobby: initialize the bot
         :return: assert that "sorry, this game is full" was sent to the 7th player
         """
 
-        for i, window in enumerate(browser.window_handles):
-            if i == 0:
-                continue
-            browser.switch_to.window(window)
-            time.sleep(1)
-            browser.find_elements(by=By.XPATH, value='//descendant::button[.="Join"]')[-1].click()
-            time.sleep(2)
+        browser.switch_to.window(browser.window_handles[-1])
+        time.sleep(1)
+        browser.find_elements(by=By.XPATH, value='//descendant::button[.="Join"]')[-1].click()
+        time.sleep(2)
 
         msgs = browser.find_elements(by=By.CLASS_NAME, value="messageListItem-ZZ7v6g")
         msg = msgs[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI")

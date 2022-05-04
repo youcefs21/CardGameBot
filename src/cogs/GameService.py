@@ -117,7 +117,7 @@ class Lobby:
         lobby_msg = await ctx.send_response(embed=embed, view=lobby_view)
 
         while not lobby_view.is_finished():
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
 
             # check that there is at least 1 player in the lobby
             if len(lobby_view.player_ids) == 0:
