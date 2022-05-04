@@ -6,9 +6,6 @@ import logging
 from decouple import config
 
 
-coloredlogs.install(level=logging.INFO)
-
-
 def main():
     bot = discord.Bot(debug_guilds=config(
         'DEBUG_GUILDS',
@@ -21,11 +18,12 @@ def main():
         if filename.endswith('.py'):
             bot.load_extension(f'src.cogs.{filename[:-3]}')
 
-    bot.run(config('TOKEN'))
-
     return bot
 
 
 if __name__ == '__main__':
-    main()
+    coloredlogs.install(level=logging.INFO)
+    bt = main()
+    bt.run(config('TOKEN'))
+
 

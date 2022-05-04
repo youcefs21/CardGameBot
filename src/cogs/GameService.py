@@ -20,7 +20,7 @@ class GameService(commands.Cog):
         # get the id of the user that used the slash command and check that they are not already in a game
         user_id = ctx.user.id
         if user_id in self.users_in_game:
-            await ctx.respond("You're already in a game", ephemeral=True)
+            await ctx.respond("You're already in a game!", ephemeral=True)
             return
 
         self.users_in_game.add(user_id)
