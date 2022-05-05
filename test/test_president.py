@@ -1,3 +1,26 @@
+
+###############################################################################
+#            THE CODE BELLOW USES SELF-BOTS, WHICH ARE AGAINST                #
+#       THE DISCORD TERMS OF SERVICE. THUS, IT HAS BEEN DEPRECATED            #
+###############################################################################
+#                                                                             #
+# they were a pain to figure out,                                             #
+#                                       and a joy to see finally working      #
+#                                                                             #
+#                                                                             #
+#     Tester1                                                                 #
+#                          Tester2                                            #
+#                                           Tester3                           #
+#                                                     Tester4                 #
+#                              Tester5                                        #
+#               Tester6                                                       #
+#                                            Tester7                          #
+#                                                                             #
+#                         you will be missed o7                               #
+###############################################################################
+
+
+"""
 import time
 
 import discord
@@ -70,12 +93,12 @@ class TestLobby:
 
     @pytest.fixture(scope="function")
     def min_lobby(self, browser, bot):
-        """
+        # <start doc string>
         start a game of president with only 1 player, the host
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param bot: initialize the bot
         :return: bot
-        """
+        # <end doc string>
 
         browser.switch_to.window(browser.window_handles[0])
         browser.find_element(by=By.CLASS_NAME, value="attachButton-1ijpt9").click()
@@ -108,12 +131,13 @@ class TestLobby:
             browser.find_elements(by=By.XPATH, value='//descendant::button[.="Leave"]')[-1].click()
 
     def test_no_double_host(self, browser, min_lobby):
-        """
+        # <start doc string>
         test that the host can't join their own game
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param min_lobby: initialize the bot and start a game of president
         :return: assert that "You're already in a game!" was sent
-        """
+        # <end doc string>
+
 
         ActionChains(browser).send_keys("/play president" + Keys.ENTER + Keys.ENTER).perform()
         time.sleep(2)
@@ -122,12 +146,12 @@ class TestLobby:
         assert msg[-1].find_element(by=By.CLASS_NAME, value="messageContent-2t3eCI").text == "You're already in a game!"
 
     def test_min_player_count(self, browser, min_lobby):
-        """
+        # <start doc string>
         test that the host can't start a game with less than 2 players
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param min_lobby: initialize the bot and start a game of president
         :return: assert that "There isn't enough players!" was sent
-        """
+        # <end doc string>
         time.sleep(2)
 
         browser.find_elements(by=By.XPATH, value='//descendant::button[.="Next"]')[-1].click()
@@ -137,12 +161,12 @@ class TestLobby:
         assert msg.text == "There isn't enough players!"
 
     def test_max_player_count(self, browser, full_lobby):
-        """
+        # <start doc string>
         test that no more than 6 players can join a game
         :param browser: Firefox webdriver with at least 1 logged in discord account
         :param full_lobby: initialize the bot
         :return: assert that "sorry, this game is full" was sent to the 7th player
-        """
+        # <end doc string>
 
         browser.switch_to.window(browser.window_handles[-1])
         time.sleep(1)
@@ -155,4 +179,4 @@ class TestLobby:
 
         browser.switch_to.window(browser.window_handles[-1])
         browser.close()
-
+"""

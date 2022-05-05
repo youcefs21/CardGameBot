@@ -15,6 +15,13 @@
 
 -->
 
+## Screen Shots
+
+#### Game lobby:
+
+<img src="https://user-images.githubusercontent.com/34604972/166860070-5aae2327-26ef-4ce2-ac5f-302740dd5822.png" width="500" alt="Game lobby for a game of president">
+
+
 ## Installation
 
 I'll have a public bot at some point, but for now you'll need to host the bot yourself.
@@ -29,9 +36,5 @@ I'll have a public bot at some point, but for now you'll need to host the bot yo
 
 ## Testing
 
-0. if you haven't already, complete the [installation](#installation) section
-1. install [geckodriver](https://github.com/mozilla/geckodriver/releases) (needed for selenium)
-2. place the login information of 7 discord accounts you want to use for testing in the `.env` file from earlier.
-3. visit the channel you want to use for testing in the [web version of discord](https://discord.com/login) and place the url in the `TEST_CHANNEL` variable in the `.env` file.
-4. Make sure all the accounts have access to the channel you want to test in.
-5. run `pytest test` in the terminal
+run `pytest test` in the terminal
+
