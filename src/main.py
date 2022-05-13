@@ -6,11 +6,14 @@ import logging
 from decouple import config
 
 
-def main():
-    bot = discord.Bot(debug_guilds=config(
-        'DEBUG_GUILDS',
-        cast=lambda v: [int(s.strip()) for s in v.split(',')]
-    ))
+def main(proxy=None):
+    bot = discord.Bot(
+        debug_guilds=config(
+            'DEBUG_GUILDS',
+            cast=lambda v: [int(s.strip()) for s in v.split(',')]
+        ),
+        proxy=proxy
+    )
 
     # loading all the extensions
     dir_name = os.path.dirname(__file__)
