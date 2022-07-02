@@ -154,7 +154,7 @@ class Lobby:
 
         for i, player_id in enumerate(player_ids):
             player = await self.bot.fetch_user(player_id)
-            embed.add_field(name=f"Player {i+1}", value=player)
+            embed.add_field(name=f"Player {i+1}", value=player.name)
 
         return embed
 

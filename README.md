@@ -1,4 +1,7 @@
- # Card Game Bot
+
+WORK IN PROGRESS
+
+# Card Game Bot
 
 
  A discord bot that allows you to play a variety of card games with friends
